@@ -12,8 +12,6 @@
 namespace avathar\bbguild_wow\game;
 
 use avathar\bbguild\model\games\game_api_interface;
-use avathar\bbguild\model\player\player;
-use avathar\bbguild\model\player\ranks;
 use avathar\bbguild_wow\api\battlenet;
 
 /**
@@ -34,16 +32,26 @@ class wow_api implements game_api_interface
 	/** @var string */
 	private $guild_wow_table;
 
+	/** @var string */
+	private $bb_players_table;
+
+	/** @var string */
+	private $bb_ranks_table;
+
 	/**
 	 * @param \phpbb\cache\service              $cache
 	 * @param \phpbb\db\driver\driver_interface $db
 	 * @param string                            $guild_wow_table
+	 * @param string                            $bb_players_table
+	 * @param string                            $bb_ranks_table
 	 */
-	public function __construct(\phpbb\cache\service $cache, \phpbb\db\driver\driver_interface $db, $guild_wow_table)
+	public function __construct(\phpbb\cache\service $cache, \phpbb\db\driver\driver_interface $db, $guild_wow_table, $bb_players_table, $bb_ranks_table)
 	{
 		$this->cache = $cache;
 		$this->db = $db;
 		$this->guild_wow_table = $guild_wow_table;
+		$this->bb_players_table = $bb_players_table;
+		$this->bb_ranks_table = $bb_ranks_table;
 	}
 
 	/**
@@ -166,20 +174,189 @@ class wow_api implements game_api_interface
 	 */
 	public function sync_guild_members(array $member_data, int $guild_id, string $region, int $min_level): void
 	{
-		global $db, $user;
-
 		if (empty($member_data))
 		{
 			return;
 		}
 
-		// Update ranks table
-		$rank = new ranks($guild_id);
-		$rank->WoWRankFix($member_data, $guild_id);
+		$this->sync_wow_ranks($member_data, $guild_id);
+		$this->update_wow_roster($member_data, $guild_id, $region, $min_level);
+	}
 
-		// Update player table
-		$mb = new player();
-		$mb->WoWArmoryUpdate($member_data, $guild_id, $region, $min_level);
+	/**
+	 * Synchronise WoW guild ranks from Battle.net API data.
+	 *
+	 * Creates any ranks that exist in the API data but not yet in the database.
+	 *
+	 * @param array $member_data Raw member array from Battle.net API
+	 * @param int   $guild_id
+	 */
+	private function sync_wow_ranks(array $member_data, int $guild_id): void
+	{
+		$newranks = array();
+		foreach ($member_data as $new)
+		{
+			$newranks[$new['rank']] = 0;
+		}
+		foreach ($member_data as $new)
+		{
+			$newranks[$new['rank']] += 1;
+		}
+		ksort($newranks);
+
+		// Get existing ranks
+		$sql = 'SELECT rank_id FROM ' . $this->bb_ranks_table . '
+				WHERE guild_id = ' . (int) $guild_id . ' AND rank_id < 90
+				ORDER BY rank_id ASC';
+		$result = $this->db->sql_query($sql);
+		$oldranks = array();
+		while ($row = $this->db->sql_fetchrow($result))
+		{
+			$oldranks[(int) $row['rank_id']] = 0;
+		}
+		$this->db->sql_freeresult($result);
+
+		// Insert ranks that don't exist yet
+		$diff = array_diff_key($newranks, $oldranks);
+		foreach ($diff as $rank_id => $count)
+		{
+			// Delete + insert to avoid duplicates
+			$sql = 'DELETE FROM ' . $this->bb_ranks_table . '
+					WHERE rank_id = ' . (int) $rank_id . '
+					AND guild_id = ' . (int) $guild_id;
+			$this->db->sql_query($sql);
+
+			$query = $this->db->sql_build_array('INSERT', array(
+				'rank_id'     => (int) $rank_id,
+				'rank_name'   => 'Rank' . $rank_id,
+				'rank_hide'   => 0,
+				'rank_prefix' => '',
+				'rank_suffix' => '',
+				'guild_id'    => (int) $guild_id,
+			));
+			$this->db->sql_query('INSERT INTO ' . $this->bb_ranks_table . $query);
+		}
+	}
+
+	/**
+	 * Update the WoW guild roster from Battle.net API data.
+	 *
+	 * Inserts new players and updates existing ones.
+	 *
+	 * @param array  $member_data Raw member array from Battle.net API
+	 * @param int    $guild_id
+	 * @param string $region
+	 * @param int    $min_level   Minimum level to import
+	 */
+	private function update_wow_roster(array $member_data, int $guild_id, string $region, int $min_level): void
+	{
+		global $user;
+
+		$player_ids = array();
+		$oldplayers = array();
+		$newplayers = array();
+
+		// Get existing players
+		$sql = 'SELECT player_name, player_id, player_realm FROM ' . $this->bb_players_table . '
+				WHERE player_guild_id = ' . (int) $guild_id . "
+				AND game_id = 'wow'
+				ORDER BY player_name ASC";
+		$result = $this->db->sql_query($sql);
+		while ($row = $this->db->sql_fetchrow($result))
+		{
+			$oldplayers[] = $row['player_name'] . '-' . $row['player_realm'];
+			$player_ids[bin2hex($row['player_name'] . '-' . $row['player_realm'])] = $row['player_id'];
+		}
+		$this->db->sql_freeresult($result);
+
+		foreach ($member_data as $mb)
+		{
+			$newplayers[] = $mb['character']['name'] . '-' . $mb['character']['realm'];
+		}
+
+		$to_add = array_diff($newplayers, $oldplayers);
+
+		$this->db->sql_transaction('begin');
+
+		// Insert new players
+		foreach ($member_data as $mb)
+		{
+			if (in_array($mb['character']['name'] . '-' . $mb['character']['realm'], $to_add) && $mb['character']['level'] >= $min_level)
+			{
+				$realm = isset($mb['character']['realm']) ? $mb['character']['realm'] : 'unknown';
+				$portrait_url = sprintf('http://%s.battle.net/static-render/%s/', $region, $region) . $mb['character']['thumbnail'];
+				$armory_url = sprintf('http://%s.battle.net/wow/en/', $region) . 'character/' . $realm . '/' . $mb['character']['name'] . '/simple';
+				$title = '';
+				if (isset($mb['titles']))
+				{
+					foreach ($mb['titles'] as $t)
+					{
+						if (isset($t['selected']))
+						{
+							$title = $t['name'];
+						}
+					}
+				}
+
+				$query = $this->db->sql_build_array('INSERT', array(
+					'player_name'         => ucwords($mb['character']['name']),
+					'player_status'       => 1,
+					'player_level'        => (int) $mb['character']['level'],
+					'player_race_id'      => (int) $mb['character']['race'],
+					'player_class_id'     => (int) $mb['character']['class'],
+					'player_rank_id'      => isset($mb['rank']) ? (int) $mb['rank'] : 1,
+					'player_role'         => 'NA',
+					'player_realm'        => $realm,
+					'player_region'       => $region,
+					'player_comment'      => sprintf($user->lang['ADMIN_ADD_PLAYER_SUCCESS'], $mb['character']['name'], date('F j, Y, g:i a')),
+					'player_joindate'     => time(),
+					'player_outdate'      => mktime(0, 0, 0, 12, 31, 2030),
+					'player_guild_id'     => (int) $guild_id,
+					'player_gender_id'    => (int) $mb['character']['gender'],
+					'player_achiev'       => (int) $mb['character']['achievementPoints'],
+					'player_armory_url'   => $armory_url,
+					'phpbb_user_id'       => 0,
+					'game_id'             => 'wow',
+					'player_portrait_url' => (string) $portrait_url,
+					'player_title'        => $title,
+					'last_update'         => time(),
+				));
+				$this->db->sql_query('INSERT INTO ' . $this->bb_players_table . $query);
+			}
+		}
+
+		// Update existing players
+		$to_update = array_intersect($newplayers, $oldplayers);
+		foreach ($member_data as $mb)
+		{
+			if (in_array($mb['character']['name'] . '-' . $mb['character']['realm'], $to_update))
+			{
+				$realm = isset($mb['character']['realm']) ? $mb['character']['realm'] : 'unknown';
+				$player_id = (int) $player_ids[bin2hex($mb['character']['name'] . '-' . $mb['character']['realm'])];
+
+				$sql_ary = array(
+					'player_name'         => ucwords($mb['character']['name']),
+					'player_level'        => (int) $mb['character']['level'],
+					'player_race_id'      => (int) $mb['character']['race'],
+					'player_realm'        => $mb['character']['realm'],
+					'player_region'       => $region,
+					'player_class_id'     => (int) $mb['character']['class'],
+					'player_rank_id'      => (int) $mb['rank'],
+					'player_guild_id'     => (int) $guild_id,
+					'player_gender_id'    => (int) $mb['character']['gender'],
+					'player_achiev'       => (int) $mb['character']['achievementPoints'],
+					'player_armory_url'   => sprintf('http://%s.battle.net/wow/en/', $region) . 'character/' . $realm . '/' . $mb['character']['name'] . '/simple',
+					'player_portrait_url' => sprintf('http://%s.battle.net/static-render/%s/', $region, $region) . $mb['character']['thumbnail'],
+				);
+
+				$sql = 'UPDATE ' . $this->bb_players_table . '
+						SET ' . $this->db->sql_build_array('UPDATE', $sql_ary) . '
+						WHERE player_id = ' . $player_id;
+				$this->db->sql_query($sql);
+			}
+		}
+
+		$this->db->sql_transaction('commit');
 	}
 
 	/**

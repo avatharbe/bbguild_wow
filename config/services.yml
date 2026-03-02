@@ -11,6 +11,8 @@ services:
             - '@cache'
             - '@dbal.conn'
             - '%avathar.bbguild_wow.tables.bb_guild_wow%'
+            - '%avathar.bbguild.tables.bb_players%'
+            - '%avathar.bbguild.tables.bb_ranks%'
 
     avathar.bbguild_wow.provider:
         class: avathar\bbguild_wow\game\wow_provider
