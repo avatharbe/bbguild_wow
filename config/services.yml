@@ -1,0 +1,17 @@
+services:
+    avathar.bbguild_wow.installer:
+        class: avathar\bbguild_wow\game\wow_installer
+
+    avathar.bbguild_wow.api:
+        class: avathar\bbguild_wow\game\wow_api
+        arguments:
+            - '@cache'
+
+    avathar.bbguild_wow.provider:
+        class: avathar\bbguild_wow\game\wow_provider
+        arguments:
+            - '@avathar.bbguild_wow.installer'
+            - '@avathar.bbguild_wow.api'
+            - '@ext.manager'
+        tags:
+            - { name: bbguild.game_provider }
