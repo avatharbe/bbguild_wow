@@ -1,4 +1,5 @@
 parameters:
+    avathar.bbguild_wow.tables.bb_guild_wow: '%core.table_prefix%bb_guild_wow'
     avathar.bbguild_wow.tables.bb_achievement_track: '%core.table_prefix%bb_achievement_track'
     avathar.bbguild_wow.tables.bb_achievement: '%core.table_prefix%bb_achievement'
     avathar.bbguild_wow.tables.bb_achievement_rewards: '%core.table_prefix%bb_achievement_rewards'

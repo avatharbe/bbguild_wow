@@ -28,12 +28,22 @@ class wow_api implements game_api_interface
 	/** @var \phpbb\cache\service */
 	private $cache;
 
+	/** @var \phpbb\db\driver\driver_interface */
+	private $db;
+
+	/** @var string */
+	private $guild_wow_table;
+
 	/**
-	 * @param \phpbb\cache\service $cache
+	 * @param \phpbb\cache\service              $cache
+	 * @param \phpbb\db\driver\driver_interface $db
+	 * @param string                            $guild_wow_table
 	 */
-	public function __construct(\phpbb\cache\service $cache)
+	public function __construct(\phpbb\cache\service $cache, \phpbb\db\driver\driver_interface $db, $guild_wow_table)
 	{
 		$this->cache = $cache;
+		$this->db = $db;
+		$this->guild_wow_table = $guild_wow_table;
 	}
 
 	/**
@@ -84,8 +94,16 @@ class wow_api implements game_api_interface
 			$result['guildarmoryurl'] = sprintf('http://%s.battle.net/wow/en/', $raw_data['_region'] ?? '') . 'guild/' . ($raw_data['_realm'] ?? '') . '/' . $raw_data['name'] . '/';
 		}
 
-		// Emblem data
+		// Emblem data — generate emblem image if data available
 		$result['emblem'] = isset($raw_data['emblem']) ? $raw_data['emblem'] : '';
+		$result['emblempath'] = '';
+		if (!empty($result['emblem']))
+		{
+			$guild_name = isset($raw_data['name']) ? $raw_data['name'] : '';
+			$realm = $raw_data['_realm'] ?? '';
+			$region = $raw_data['_region'] ?? '';
+			$result['emblempath'] = $this->create_emblem($result['emblem'], $result['faction'], $guild_name, $realm, $region);
+		}
 
 		// Member data
 		$result['members'] = isset($raw_data['members']) ? $raw_data['members'] : array();
@@ -170,6 +188,185 @@ class wow_api implements game_api_interface
 	public function requires_api_key(): bool
 	{
 		return true;
+	}
+
+	/**
+	 * @inheritdoc
+	 */
+	public function save_guild_extension(int $guild_id, array $processed): void
+	{
+		$row = array(
+			'guild_id'           => $guild_id,
+			'battlegroup'        => isset($processed['battlegroup']) ? $processed['battlegroup'] : '',
+			'level'              => isset($processed['level']) ? $processed['level'] : 0,
+			'achievementpoints'  => isset($processed['achievementpoints']) ? $processed['achievementpoints'] : 0,
+			'guildarmoryurl'     => isset($processed['guildarmoryurl']) ? $processed['guildarmoryurl'] : '',
+		);
+
+		// Check if row exists
+		$sql = 'SELECT guild_id FROM ' . $this->guild_wow_table . ' WHERE guild_id = ' . (int) $guild_id;
+		$result = $this->db->sql_query($sql);
+		$exists = $this->db->sql_fetchrow($result);
+		$this->db->sql_freeresult($result);
+
+		if ($exists)
+		{
+			$update = $row;
+			unset($update['guild_id']);
+			$query = $this->db->sql_build_array('UPDATE', $update);
+			$this->db->sql_query('UPDATE ' . $this->guild_wow_table . ' SET ' . $query . ' WHERE guild_id = ' . (int) $guild_id);
+		}
+		else
+		{
+			$query = $this->db->sql_build_array('INSERT', $row);
+			$this->db->sql_query('INSERT INTO ' . $this->guild_wow_table . $query);
+		}
+	}
+
+	/**
+	 * Create a WoW Guild emblem image from Battle.net emblem data.
+	 *
+	 * Adapted for phpBB from http://us.battle.net/wow/en/forum/topic/3082248497#8
+	 *
+	 * @author    Thomas Andersen <acoon@acoon.dk>
+	 * @copyright Copyright (c) 2011, Thomas Andersen, http://sourceforge.net/projects/wowarmoryapi
+	 * @param array  $emblem_data Emblem data array from Battle.net API
+	 * @param int    $faction     Guild faction (1=Alliance, 2=Horde)
+	 * @param string $guild_name  Guild name
+	 * @param string $realm       Realm name
+	 * @param string $region      Region code
+	 * @param int    $width       Output image width
+	 * @return string Path to generated emblem image
+	 */
+	private function create_emblem($emblem_data, $faction, $guild_name, $realm, $region, $width = 175)
+	{
+		global $phpbb_container;
+		$ext_path = $this->get_ext_path($phpbb_container);
+
+		$safe_name = $this->mb_str_replace(' ', '_', $guild_name);
+		$imgfile = $ext_path . 'images/guildemblem/' . $region . '_' . $realm . '_' . $safe_name . '.png';
+		$outputpath = $imgfile;
+
+		if (file_exists($imgfile) and $width == imagesx(imagecreatefrompng($imgfile)) and (filemtime($imgfile) + 86000) > time())
+		{
+			$finalimg = imagecreatefrompng($imgfile);
+			imagesavealpha($finalimg, true);
+			imagealphablending($finalimg, true);
+		}
+		else
+		{
+			if ($width > 1 and $width < 215)
+			{
+				$height = ($width / 215) * 230;
+				$finalimg = imagecreatetruecolor($width, $height);
+				$trans_colour = imagecolorallocatealpha($finalimg, 0, 0, 0, 127);
+				imagefill($finalimg, 0, 0, $trans_colour);
+				imagesavealpha($finalimg, true);
+				imagealphablending($finalimg, true);
+			}
+
+			$ring_name = ($faction == 1) ? 'alliance' : 'horde';
+
+			$imgOut = imagecreatetruecolor(215, 230);
+
+			$emblemURL = $ext_path . 'images/wowapi/emblems/emblem_' . sprintf('%02s', $emblem_data['icon']) . '.png';
+			$borderURL = $ext_path . 'images/wowapi/borders/border_' . sprintf('%02s', $emblem_data['border']) . '.png';
+			$ringURL = $ext_path . 'images/wowapi/static/ring-' . $ring_name . '.png';
+			$shadowURL = $ext_path . 'images/wowapi/static/shadow_00.png';
+			$bgURL = $ext_path . 'images/wowapi/static/bg_00.png';
+			$overlayURL = $ext_path . 'images/wowapi/static/overlay_00.png';
+			$hooksURL = $ext_path . 'images/wowapi/static/hooks.png';
+
+			imagesavealpha($imgOut, true);
+			imagealphablending($imgOut, true);
+			$trans_colour = imagecolorallocatealpha($imgOut, 0, 0, 0, 127);
+			imagefill($imgOut, 0, 0, $trans_colour);
+
+			$ring = imagecreatefrompng($ringURL);
+			$ring_size = getimagesize($ringURL);
+
+			$emblem = imagecreatefrompng($emblemURL);
+			$emblem_size = getimagesize($emblemURL);
+			imagelayereffect($emblem, IMG_EFFECT_OVERLAY);
+			$emblemcolor = preg_replace('/^ff/i', '', $emblem_data['iconColor']);
+			$color_r = hexdec(substr($emblemcolor, 0, 2));
+			$color_g = hexdec(substr($emblemcolor, 2, 2));
+			$color_b = hexdec(substr($emblemcolor, 4, 2));
+			imagefilledrectangle($emblem, 0, 0, $emblem_size[0], $emblem_size[1], imagecolorallocatealpha($emblem, $color_r, $color_g, $color_b, 0));
+
+			$border = imagecreatefrompng($borderURL);
+			$border_size = getimagesize($borderURL);
+			imagelayereffect($border, IMG_EFFECT_OVERLAY);
+			$bordercolor = preg_replace('/^ff/i', '', $emblem_data['borderColor']);
+			$color_r = hexdec(substr($bordercolor, 0, 2));
+			$color_g = hexdec(substr($bordercolor, 2, 2));
+			$color_b = hexdec(substr($bordercolor, 4, 2));
+			imagefilledrectangle($border, 0, 0, $border_size[0] + 100, $border_size[0] + 100, imagecolorallocatealpha($border, $color_r, $color_g, $color_b, 0));
+
+			$shadow = imagecreatefrompng($shadowURL);
+
+			$bg = imagecreatefrompng($bgURL);
+			$bg_size = getimagesize($bgURL);
+			imagelayereffect($bg, IMG_EFFECT_OVERLAY);
+			$bgcolor = preg_replace('/^ff/i', '', $emblem_data['backgroundColor']);
+			$color_r = hexdec(substr($bgcolor, 0, 2));
+			$color_g = hexdec(substr($bgcolor, 2, 2));
+			$color_b = hexdec(substr($bgcolor, 4, 2));
+			imagefilledrectangle($bg, 0, 0, $bg_size[0] + 100, $bg_size[0] + 100, imagecolorallocatealpha($bg, $color_r, $color_g, $color_b, 0));
+
+			$overlay = imagecreatefrompng($overlayURL);
+			$hooks = imagecreatefrompng($hooksURL);
+
+			$x = 20;
+			$y = 23;
+
+			imagecopy($imgOut, $ring, 0, 0, 0, 0, $ring_size[0], $ring_size[1]);
+
+			$size = getimagesize($shadowURL);
+			imagecopy($imgOut, $shadow, $x, $y, 0, 0, $size[0], $size[1]);
+			imagecopy($imgOut, $bg, $x, $y, 0, 0, $bg_size[0], $bg_size[1]);
+			imagecopy($imgOut, $emblem, $x + 17, $y + 30, 0, 0, $emblem_size[0], $emblem_size[1]);
+			imagecopy($imgOut, $border, $x + 13, $y + 15, 0, 0, $border_size[0], $border_size[1]);
+			$size = getimagesize($overlayURL);
+			imagecopy($imgOut, $overlay, $x, $y + 2, 0, 0, $size[0], $size[1]);
+			$size = getimagesize($hooksURL);
+			imagecopy($imgOut, $hooks, $x - 2, $y, 0, 0, $size[0], $size[1]);
+
+			if ($width > 1 and $width < 215)
+			{
+				imagecopyresampled($finalimg, $imgOut, 0, 0, 0, 0, $width, $height, 215, 230);
+			}
+			else
+			{
+				$finalimg = $imgOut;
+			}
+
+			imagepng($finalimg, $imgfile);
+		}
+
+		return $outputpath;
+	}
+
+	/**
+	 * Replace string in UTF-8 string.
+	 *
+	 * @param string $needle
+	 * @param string $replacement
+	 * @param string $haystack
+	 * @return string
+	 */
+	private function mb_str_replace($needle, $replacement, $haystack)
+	{
+		$needle_len = mb_strlen($needle);
+		$pos = mb_strpos($haystack, $needle);
+		while (!($pos === false))
+		{
+			$front = mb_substr($haystack, 0, $pos);
+			$back = mb_substr($haystack, $pos + $needle_len);
+			$haystack = $front . $replacement . $back;
+			$pos = mb_strpos($haystack, $needle);
+		}
+		return $haystack;
 	}
 
 	/**
