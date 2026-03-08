@@ -34,4 +34,6 @@ $lang = array_merge(
 	'WOWAPI_NO_CHARACTER' => 'Es wurde kein Charaktername eingetragen.',
 	'CHARACTERAPICALL' => 'Charaktere vom Armory aktualisieren',
 	'CALL_BATTLENET_CHAR_API' => 'Anruf Battle.NET Character API für 50 am ältesten bearbeitete WoW characters. Deaktivierung folgt indem das Charakter über 180 tage nicht aktualisiert wurde im Armory.',
+	'ARM_SHOWACH' => 'Erfolgspunkte anzeigen',
+	'ARM_SHOWACH_EXPLAIN' => 'Erfolgspunkttotale in der Gildenliste anzeigen.',
 ));

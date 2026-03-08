@@ -34,4 +34,6 @@ $lang = array_merge(
 	'WOWAPI_NO_CHARACTER' => 'Character name not specified.',
 	'CHARACTERAPICALL' => 'mise à jour membres depuis API',
 	'CALL_BATTLENET_CHAR_API' => 'Appel Battle.NET Character API pour 50 membres WoW ayant la mise à jour la plus ancienne. Désactivation si la dernière activité sur l\'armurerie remonte à 180 jours.',
+	'ARM_SHOWACH' => 'Montrer les points des Haut Faits ?',
+	'ARM_SHOWACH_EXPLAIN' => 'Afficher les totaux de points de haut fait dans la liste de guilde.',
 ));

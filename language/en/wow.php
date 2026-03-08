@@ -37,4 +37,6 @@ $lang = array_merge(
 	'WOWAPI_NO_CHARACTER' => 'Character name not specified.',
 	'CHARACTERAPICALL' => 'Update Players from Character API',
 	'CALL_BATTLENET_CHAR_API' => 'Call Battle.NET Character API for this Guild. toggles to inactive if lastModified flag was > 90 days ago, reactivates if < 90 and character deactivation status was \'API\'.',
+	'ARM_SHOWACH' => 'Show Achievement Points',
+	'ARM_SHOWACH_EXPLAIN' => 'Display achievement point totals on the guild roster.',
 ));

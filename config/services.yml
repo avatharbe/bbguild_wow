@@ -26,6 +26,7 @@ services:
     avathar.bbguild_wow.listener:
         class: avathar\bbguild_wow\event\listener
         arguments:
+            - '@config'
             - '@template'
             - '@dbal.conn'
             - '@request'

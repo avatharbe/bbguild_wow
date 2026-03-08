@@ -34,4 +34,6 @@ $lang = array_merge(
 	'WOWAPI_NO_CHARACTER' => 'Il nome del personaggio non è stato specificato.',
 	'CHARACTERAPICALL' => 'Aggiorna membri tramite Character API',
 	'CALL_BATTLENET_CHAR_API' => "Chiamare Battle.NET API di caratteri per questa gilda. alterna a inattivo se lastModified bandiera era > 90 giorni fa, riattiva se < 90 e il carattere disattivazione dello stato era 'API'.",
+	'ARM_SHOWACH' => 'Mostrare i Punti impresa',
+	'ARM_SHOWACH_EXPLAIN' => 'Visualizzare i totali dei punti impresa nella lista dei membri della gilda.',
 ));

@@ -13,6 +13,7 @@
 
 namespace avathar\bbguild_wow\event;
 
+use phpbb\config\config;
 use phpbb\db\driver\driver_interface;
 use phpbb\request\request;
 use phpbb\template\template;
@@ -20,6 +21,9 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 class listener implements EventSubscriberInterface
 {
+	/** @var config */
+	private $config;
+
 	/** @var template */
 	private $template;
 
@@ -33,13 +37,15 @@ class listener implements EventSubscriberInterface
 	private $guild_wow_table;
 
 	/**
+	 * @param config           $config
 	 * @param template         $template
 	 * @param driver_interface $db
 	 * @param request          $request
 	 * @param string           $guild_wow_table
 	 */
-	public function __construct(template $template, driver_interface $db, request $request, $guild_wow_table)
+	public function __construct(config $config, template $template, driver_interface $db, request $request, $guild_wow_table)
 	{
+		$this->config = $config;
 		$this->template = $template;
 		$this->db = $db;
 		$this->request = $request;
@@ -58,6 +64,8 @@ class listener implements EventSubscriberInterface
 			'avathar.bbguild.acp_editgames_submit'      => 'on_editgames_submit',
 			'avathar.bbguild.acp_editguild_display'     => 'on_editguild_display',
 			'avathar.bbguild.acp_listplayers_display'   => 'on_listplayers_display',
+			'avathar.bbguild.acp_config_display'        => 'on_config_display',
+			'avathar.bbguild.acp_config_submit'         => 'on_config_submit',
 		);
 	}
 
@@ -222,5 +230,23 @@ class listener implements EventSubscriberInterface
 	{
 		// The core already sets HAS_API from game_registry->has_api().
 		// This handler is available for future WoW-specific player list vars.
+	}
+
+	/**
+	 * Inject the "Show Achievement Points" checkbox into the bbGuild config page.
+	 */
+	public function on_config_display()
+	{
+		$this->template->assign_vars(array(
+			'F_SHOWACHIEV' => (int) $this->config['bbguild_show_achiev'],
+		));
+	}
+
+	/**
+	 * Save the "Show Achievement Points" setting from the bbGuild config page.
+	 */
+	public function on_config_submit()
+	{
+		$this->config->set('bbguild_show_achiev', $this->request->variable('bbguild_show_achiev', 0), true);
 	}
 }

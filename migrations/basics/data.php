@@ -42,6 +42,7 @@ class data extends \phpbb\db\migration\container_aware_migration
 	public function update_data()
 	{
 		return [
+			['config.add', ['bbguild_show_achiev', 0]],
 			['custom', [[$this, 'seed_game_data']]],
 		];
 	}
@@ -49,6 +50,7 @@ class data extends \phpbb\db\migration\container_aware_migration
 	public function revert_data()
 	{
 		return [
+			['config.remove', ['bbguild_show_achiev']],
 			['custom', [[$this, 'remove_game_data']]],
 		];
 	}
