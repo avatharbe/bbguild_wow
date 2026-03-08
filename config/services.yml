@@ -13,7 +13,7 @@ services:
     avathar.bbguild_wow.api:
         class: avathar\bbguild_wow\game\wow_api
         arguments:
-            - '@cache.driver'
+            - '@cache'
             - '@dbal.conn'
             - '%avathar.bbguild_wow.tables.bb_guild_wow%'
             - '%avathar.bbguild.tables.bb_players%'
