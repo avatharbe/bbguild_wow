@@ -8,31 +8,43 @@
  * @author    Chris Saylor
  * @author    Daniel Cannon <daniel@danielcannon.co.uk>
  * @copyright Copyright (c) 2011, 2015 Chris Saylor, Daniel Cannon, Andreas Vandenberghe
- * @link      https://dev.battle.net/
+ * @link      https://develop.battle.net/
  */
 
 namespace avathar\bbguild_wow\api;
 
-use avathar\bbguild\model\admin\curl;
-
 /**
  * Resource skeleton
  *
+ * Uses OAuth 2.0 Client Credentials Grant for authentication.
+ *
  * @package avathar\bbguild_wow\api
  */
-abstract class battlenet_resource extends curl
+abstract class battlenet_resource
 {
 	/**
-	 * List of region urls
+	 * List of region API base URLs
 	 *
 	 * @var array
 	 */
 	protected $api_url = array(
-		'eu'  => 'https://eu.api.battle.net/wow/',
-		'us'  => 'https://us.api.battle.net/wow/',
-		'kr'  => 'https://kr.api.battle.net/wow/',
-		'tw'  => 'https://tw.api.battle.net/wow/',
-		'sea' => 'https://us.api.battle.net/wow/',
+		'eu'  => 'https://eu.api.blizzard.com/',
+		'us'  => 'https://us.api.blizzard.com/',
+		'kr'  => 'https://kr.api.blizzard.com/',
+		'tw'  => 'https://tw.api.blizzard.com/',
+	);
+
+	/**
+	 * OAuth 2.0 token endpoints per region
+	 *
+	 * @var array
+	 */
+	protected $token_url = array(
+		'eu'  => 'https://oauth.battle.net/token',
+		'us'  => 'https://oauth.battle.net/token',
+		'kr'  => 'https://oauth.battle.net/token',
+		'tw'  => 'https://oauth.battle.net/token',
+		'cn'  => 'https://oauth.battlenet.com.cn/token',
 	);
 
 	/**
@@ -45,7 +57,6 @@ abstract class battlenet_resource extends curl
 		'us'  => array('en_US', 'es_MX', 'pt_BR'),
 		'kr'  => array('ko_KR'),
 		'tw'  => array('zh_TW'),
-		'sea' => array('en_US'),
 	);
 
 	/** @var string */
@@ -54,11 +65,14 @@ abstract class battlenet_resource extends curl
 	/** @var string */
 	public $locale;
 
-	/** @var string */
+	/** @var string Client ID (stored as apikey in bb_games) */
 	public $apikey;
 
-	/** @var string */
+	/** @var string Client Secret (stored as privkey in bb_games) */
 	public $privkey;
+
+	/** @var string Namespace type: 'static', 'dynamic', or 'profile' */
+	public $namespace_type = 'dynamic';
 
 	/** @var array */
 	protected $methods_allowed;
@@ -81,8 +95,6 @@ abstract class battlenet_resource extends curl
 	{
 		global $user;
 
-		parent::__construct();
-
 		if (empty($this->methods_allowed))
 		{
 			trigger_error($user->lang['NO_METHODS']);
@@ -93,7 +105,88 @@ abstract class battlenet_resource extends curl
 	}
 
 	/**
+	 * Fetch an OAuth 2.0 access token using Client Credentials Grant.
+	 *
+	 * Caches the token using phpBB cache with key bbguild_wow_oauth_token_{region}.
+	 *
+	 * @param bool $force_refresh Force a new token even if cached
+	 * @return string|false Access token or false on failure
+	 */
+	protected function fetch_oauth_token($force_refresh = false)
+	{
+		$cache_key = 'bbguild_wow_oauth_token_' . $this->region;
+
+		if (!$force_refresh)
+		{
+			$cached = $this->cache->get($cache_key);
+			if ($cached !== false)
+			{
+				return $cached;
+			}
+		}
+
+		if (!isset($this->token_url[$this->region]))
+		{
+			return false;
+		}
+
+		$token_endpoint = $this->token_url[$this->region];
+		$credentials = base64_encode($this->apikey . ':' . $this->privkey);
+
+		$curl = curl_init($token_endpoint);
+		if ($curl === false)
+		{
+			return false;
+		}
+
+		curl_setopt_array($curl, array(
+			CURLOPT_POST           => true,
+			CURLOPT_POSTFIELDS     => 'grant_type=client_credentials',
+			CURLOPT_HTTPHEADER     => array(
+				'Authorization: Basic ' . $credentials,
+				'Content-Type: application/x-www-form-urlencoded',
+			),
+			CURLOPT_RETURNTRANSFER => true,
+			CURLOPT_TIMEOUT        => 30,
+			CURLOPT_FOLLOWLOCATION => true,
+		));
+
+		$response = curl_exec($curl);
+		$http_code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+		curl_close($curl);
+
+		if ($response === false || $http_code !== 200)
+		{
+			return false;
+		}
+
+		$data = json_decode($response, true);
+		if (!isset($data['access_token']))
+		{
+			return false;
+		}
+
+		// Cache for slightly less than the actual expiry (default 86400s = 24h)
+		$ttl = isset($data['expires_in']) ? (int) $data['expires_in'] - 300 : 82800;
+		$this->cache->put($cache_key, $data['access_token'], $ttl);
+
+		return $data['access_token'];
+	}
+
+	/**
+	 * Build the Battlenet-Namespace header value.
+	 *
+	 * @return string e.g. "dynamic-eu", "static-us", "profile-kr"
+	 */
+	protected function get_namespace()
+	{
+		return $this->namespace_type . '-' . $this->region;
+	}
+
+	/**
 	 * Consumes the resource by method and returns the results of the request.
+	 *
+	 * Uses OAuth 2.0 Bearer token authentication and the Battlenet-Namespace header.
 	 *
 	 * @param  string $method Request method
 	 * @param  array  $params Parameters
@@ -103,7 +196,7 @@ abstract class battlenet_resource extends curl
 	{
 		global $user;
 
-		if ($this->apikey == '')
+		if ($this->apikey == '' || $this->privkey == '')
 		{
 			trigger_error($user->lang['WOWAPI_KEY_MISSING']);
 		}
@@ -129,16 +222,16 @@ abstract class battlenet_resource extends curl
 		{
 			trigger_error(sprintf($user->lang['WOWAPI_LOCALE_NOTALLOWED'], (string) $this->region));
 		}
+
 		$requestUri = $this->api_url[$this->region];
 		$requestUri .= $this->endpoint . '/' . $method;
-
 		$requestUri .= '?locale=' . $this->locale;
 
 		if (isset($params['data']) && !empty($params['data']))
 		{
 			if (is_array($params['data']))
 			{
-				$requestUri .= http_build_query($params['data']);
+				$requestUri .= '&' . http_build_query($params['data']);
 			}
 			else
 			{
@@ -146,17 +239,87 @@ abstract class battlenet_resource extends curl
 			}
 		}
 
-		$requestUri .= '&apikey=' . $this->apikey;
-		$cachesignature = base64_encode($requestUri);
+		$cachesignature = 'bbguild_wow_api_' . base64_encode($requestUri);
 
 		if (!$data = $this->_getCachedResult($cachesignature))
 		{
-			$date = date('D, d M Y G:i:s T', time());
-			$string_to_sign = "GET\n" . $date . "\n" . $requestUri . "\n";
-			$signature = base64_encode(hash_hmac('sha1', $string_to_sign, $this->privkey, true));
-			$header = array('Host: ' . $this->region, 'Date: ' . $date, 'Authorization: BNET ' . $this->apikey . ':' . $signature);
-			$data = $this->curl($requestUri, $header, false, true);
-			$this->cache->put($cachesignature, $data, $this->cacheTtl);
+			$data = $this->_authenticatedRequest($requestUri);
+
+			// On 401, invalidate token and retry once
+			if (isset($data['response_headers']['http_code']) && $data['response_headers']['http_code'] == 401)
+			{
+				$data = $this->_authenticatedRequest($requestUri, true);
+			}
+
+			if ($data !== false)
+			{
+				$this->cache->put($cachesignature, $data, $this->cacheTtl);
+			}
+		}
+
+		return $data;
+	}
+
+	/**
+	 * Make an authenticated API request with OAuth 2.0 Bearer token.
+	 *
+	 * @param string $url           Full request URL
+	 * @param bool   $force_refresh Force token refresh
+	 * @return array|false Response data or false on failure
+	 */
+	protected function _authenticatedRequest($url, $force_refresh = false)
+	{
+		$token = $this->fetch_oauth_token($force_refresh);
+		if ($token === false)
+		{
+			global $user;
+			trigger_error($user->lang['WOWAPI_TOKEN_FAILED']);
+		}
+
+		$curl = curl_init($url);
+		if ($curl === false)
+		{
+			return false;
+		}
+
+		curl_setopt_array($curl, array(
+			CURLOPT_HTTPHEADER     => array(
+				'Authorization: Bearer ' . $token,
+				'Battlenet-Namespace: ' . $this->get_namespace(),
+			),
+			CURLOPT_RETURNTRANSFER => true,
+			CURLOPT_TIMEOUT        => 60,
+			CURLOPT_FOLLOWLOCATION => true,
+			CURLOPT_USERAGENT      => 'bbGuild/2.0 (phpBB)',
+		));
+
+		$response = curl_exec($curl);
+		$headers = curl_getinfo($curl);
+		curl_close($curl);
+
+		$data = array(
+			'response'         => '',
+			'response_headers' => (array) $headers,
+			'error'            => '',
+		);
+
+		if ($response !== false && $response !== '')
+		{
+			$decoded = json_decode($response, true);
+			if (json_last_error() === JSON_ERROR_NONE)
+			{
+				$data['response'] = $decoded;
+
+				// Check for API error responses
+				if (isset($decoded['code']) && isset($decoded['detail']))
+				{
+					$data['error'] = $decoded['detail'];
+				}
+			}
+			else
+			{
+				$data['response'] = $response;
+			}
 		}
 
 		return $data;

@@ -44,7 +44,7 @@ This extension integrates with the Blizzard Battle.net API for:
 - Character portraits and armory links
 - Guild emblem generation
 
-**Current API status:**/ The API client uses the legacy `api.battle.net` endpoints with HMAC key-based authentication. Blizzard has since migrated to OAuth 2.0. See [docs/BATTLENET_API.md](docs/BATTLENET_API.md) for details on the current state and planned updates.
+The API client uses OAuth 2.0 Client Credentials Grant with the modern `api.blizzard.com` endpoints. See [docs/BATTLENET_API.md](docs/BATTLENET_API.md) for details.
 
 ## Documentation
 

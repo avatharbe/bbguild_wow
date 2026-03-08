@@ -62,7 +62,7 @@ The most common causes:
 1. **Invalid or expired API key** — Verify your credentials at develop.battle.net
 2. **Wrong region** — Make sure your guild's region matches where it actually exists
 3. **Wrong locale** — The locale must be valid for your region (e.g. `en_GB` for EU, `en_US` for US)
-4. **API endpoint changes** — The current implementation uses legacy `api.battle.net` endpoints. Blizzard has migrated to `api.blizzard.com` with OAuth 2.0. See [BATTLENET_API.md](BATTLENET_API.md) for details.
+4. **API credentials** — Make sure both Client ID and Client Secret are entered correctly. See [BATTLENET_API.md](BATTLENET_API.md) for details.
 
 ### I get a 403 error from the API
 
@@ -73,18 +73,14 @@ This means your API key is being rejected. Possible causes:
 
 bbGuild will automatically mark the guild's armory as disabled when it receives a 403. Fix your API credentials and re-enable armory in the guild settings.
 
-### Will the API be updated to OAuth 2.0?
-
-Yes, this is planned. The current HMAC-based authentication is from the legacy Battle.net API. Modern Blizzard APIs require OAuth 2.0 client credentials. This update is tracked and will be part of a future release.
-
 ### Character portraits are not loading
 
-Portrait URLs are generated using Blizzard's CDN format:
+Portrait URLs are generated using Blizzard's CDN:
 ```
-http://{region}.battle.net/static-render/{region}/{thumbnail}
+https://render.worldofwarcraft.com/character/{region}/{thumbnail}
 ```
 
-If portraits are broken, Blizzard may have changed their CDN URLs. This will be addressed as part of the API modernization.
+If portraits are broken, check that the thumbnail path in the API response is valid.
 
 ---
 

@@ -50,23 +50,18 @@ The Battle.net API enables automatic guild member synchronization, character por
 
 ### Obtaining API Credentials
 
-> **Important:** The API credentials system is currently in transition. Blizzard has deprecated the old Mashery-based API keys in favor of OAuth 2.0 client credentials. See [BATTLENET_API.md](BATTLENET_API.md) for the current status.
-
-**Legacy key-based access (current implementation):**
-
-1. Go to [https://develop.battle.net/](https://develop.battle.net/)
-2. Create a Blizzard developer account or log in
-3. Create a new API client
-4. Note your **Client ID** (used as API key) and **Client Secret** (used as private key)
+1. Go to [https://develop.battle.net/access/clients](https://develop.battle.net/access/clients)
+2. Log in with your Battle.net account (a free account is sufficient — no game purchase required)
+3. Create a new API client (enter `http://localhost` as redirect URI)
+4. Copy your **Client ID** and **Client Secret** (the secret is shown only once)
 
 ### Entering Credentials in bbGuild
 
 1. Navigate to **ACP > bbGuild > Games**.
 2. Click **Edit** next to World of Warcraft.
-3. Enter your API key and private key.
-4. Select your **Region** (US, EU, KR, TW).
-5. Select your **Locale** (determines the language of API responses).
-6. Save.
+3. Enter your **Client ID** and **Client Secret**.
+4. Select your **Locale** (determines the language of API responses).
+5. Save.
 
 ### Available Locales by Region
 

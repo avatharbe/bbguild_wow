@@ -5,7 +5,7 @@
  * @package   bbguild_wow v2.0
  * @license   http://opensource.org/licenses/gpl-2.0.php GNU General Public License v2
  * @author    Andreas Vandenberghe <sajaki@avathar.be>
- * @link      https://dev.battle.net/
+ * @link      https://develop.battle.net/
  */
 
 namespace avathar\bbguild_wow\api;

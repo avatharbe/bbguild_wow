@@ -8,7 +8,7 @@
  * @author    Chris Saylor
  * @author    Daniel Cannon <daniel@danielcannon.co.uk>
  * @copyright Copyright (c) 2011, 2015 Chris Saylor, Daniel Cannon, Andreas Vandenberghe
- * @link      https://dev.battle.net/
+ * @link      https://develop.battle.net/
  */
 
 namespace avathar\bbguild_wow\api;
@@ -33,7 +33,7 @@ class battlenet_realm extends battlenet_resource
 	 */
 	public function getAllRealmStatus()
 	{
-		return $this->consume('status');
+		return $this->consume('status', array());
 	}
 
 	/**

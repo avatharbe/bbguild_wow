@@ -1,0 +1,127 @@
+{% include 'overall_header.html' %}
+
+<a id="maincontent"></a>
+
+<h1>{{ L_TITLE }}</h1>
+<p>{{ L_EXPLAIN }}</p>
+
+{% if S_TEST_RESULT %}
+<div class="successbox {% if TEST_STATUS == 'error' %}errorbox{% endif %}" style="margin-bottom: 15px;">
+	<h3>{% if TEST_STATUS == 'success' %}{{ lang('WOW_BNET_STATUS_OK') }}{% else %}{{ lang('WOW_BNET_STATUS_FAIL') }}{% endif %}</h3>
+	<p>{{ TEST_RESULT }}</p>
+	{% if TEST_TOKEN_PREVIEW %}
+	<p>{{ lang('WOW_BNET_TOKEN_PREVIEW') }}: <code>{{ TEST_TOKEN_PREVIEW }}</code></p>
+	{% endif %}
+</div>
+{% endif %}
+
+<form id="acp_battlenet" method="post" action="{{ U_ACTION }}">
+
+<fieldset>
+	<legend>{{ lang('WOW_BNET_CREDENTIALS') }}</legend>
+	<dl>
+		<dt><label>{{ lang('WOWAPIKEY') }}:</label></dt>
+		<dd>
+			{% if CLIENT_ID %}
+				<code>{{ CLIENT_ID }}</code>
+			{% else %}
+				<em>{{ lang('WOW_BNET_NOT_SET') }}</em>
+			{% endif %}
+		</dd>
+	</dl>
+
+	<dl>
+		<dt><label>{{ lang('WOWPRIVKEY') }}:</label></dt>
+		<dd>
+			{% if CLIENT_SECRET_MASKED %}
+				<code>{{ CLIENT_SECRET_MASKED }}</code>
+			{% else %}
+				<em>{{ lang('WOW_BNET_NOT_SET') }}</em>
+			{% endif %}
+		</dd>
+	</dl>
+
+	<dl>
+		<dt><label>{{ lang('WOWAPILOCALE') }}:</label></dt>
+		<dd>
+			{% if API_LOCALE %}
+				<code>{{ API_LOCALE }}</code>
+			{% else %}
+				<em>{{ lang('WOW_BNET_NOT_SET') }}</em>
+			{% endif %}
+		</dd>
+	</dl>
+
+	<p>
+		<a href="{{ U_EDIT_GAME }}" class="button2">{{ lang('WOW_BNET_EDIT_CREDENTIALS') }}</a>
+	</p>
+</fieldset>
+
+<fieldset>
+	<legend>{{ lang('WOW_BNET_TEST_CONNECTION') }}</legend>
+	<p>{{ lang('WOW_BNET_TEST_EXPLAIN') }}</p>
+
+	<dl>
+		<dt><label for="test_region">{{ lang('WOW_BNET_TEST_REGION') }}:</label></dt>
+		<dd>
+			<select name="test_region" id="test_region">
+				<option value="eu">EU</option>
+				<option value="us">US</option>
+				<option value="kr">KR</option>
+				<option value="tw">TW</option>
+			</select>
+		</dd>
+	</dl>
+
+	<p>
+		<input class="button1" type="submit" name="test_connection" value="{{ lang('WOW_BNET_TEST_NOW') }}" {% if not HAS_CREDENTIALS %}disabled="disabled"{% endif %} />
+		{% if not HAS_CREDENTIALS %}
+		<br /><span class="error">{{ lang('WOW_BNET_NO_CREDENTIALS') }}</span>
+		{% endif %}
+	</p>
+</fieldset>
+
+<fieldset>
+	<legend>{{ lang('WOW_BNET_TOKEN_CACHE') }}</legend>
+	<p>{{ lang('WOW_BNET_TOKEN_CACHE_EXPLAIN') }}</p>
+
+	<table class="table1 zebra-table" cellspacing="1">
+		<thead>
+			<tr>
+				<th>{{ lang('WOW_BNET_REGION') }}</th>
+				<th>{{ lang('WOW_BNET_TOKEN_STATUS') }}</th>
+				<th>{{ lang('WOW_BNET_TOKEN_PREVIEW') }}</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for region_row in loops.region_row %}
+			<tr>
+				<td>{{ region_row.REGION }}</td>
+				<td>
+					{% if region_row.HAS_TOKEN %}
+						<span style="color: green; font-weight: bold;">{{ lang('WOW_BNET_CACHED') }}</span>
+					{% else %}
+						<span style="color: #999;">{{ lang('WOW_BNET_NOT_CACHED') }}</span>
+					{% endif %}
+				</td>
+				<td>
+					{% if region_row.HAS_TOKEN %}
+						<code>{{ region_row.TOKEN_PREVIEW }}</code>
+					{% else %}
+						&mdash;
+					{% endif %}
+				</td>
+			</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+
+	<br />
+	<input type="hidden" name="action" value="clear_cache" />
+	<input class="button2" type="submit" name="submit" value="{{ lang('WOW_BNET_CLEAR_CACHE') }}" />
+</fieldset>
+
+{{ S_FORM_TOKEN }}
+</form>
+
+{% include 'overall_footer.html' %}

@@ -99,7 +99,10 @@ class wow_api implements game_api_interface
 		$result['guildarmoryurl'] = '';
 		if (isset($raw_data['name']))
 		{
-			$result['guildarmoryurl'] = sprintf('http://%s.battle.net/wow/en/', $raw_data['_region'] ?? '') . 'guild/' . ($raw_data['_realm'] ?? '') . '/' . $raw_data['name'] . '/';
+			$region = $raw_data['_region'] ?? '';
+			$realm_slug = strtolower(str_replace(' ', '-', $raw_data['_realm'] ?? ''));
+			$guild_slug = strtolower(str_replace(' ', '-', $raw_data['name']));
+			$result['guildarmoryurl'] = sprintf('https://worldofwarcraft.blizzard.com/en-%s/', $region) . 'guild/' . $region . '/' . $realm_slug . '/' . $guild_slug;
 		}
 
 		// Emblem data — generate emblem image if data available
@@ -153,7 +156,8 @@ class wow_api implements game_api_interface
 	 */
 	public function get_player_armory_url(string $name, string $realm, string $region): string
 	{
-		return sprintf('http://%s.battle.net/wow/en/', $region) . 'character/' . rawurlencode($realm) . '/' . rawurlencode($name) . '/simple';
+		$realm_slug = strtolower(str_replace(' ', '-', $realm));
+		return sprintf('https://worldofwarcraft.blizzard.com/en-%s/', $region) . 'character/' . $region . '/' . $realm_slug . '/' . rawurlencode(strtolower($name));
 	}
 
 	/**
@@ -163,7 +167,7 @@ class wow_api implements game_api_interface
 	{
 		if (isset($player_data['thumbnail']) && isset($player_data['region']))
 		{
-			return sprintf('http://%s.battle.net/static-render/%s/', $player_data['region'], $player_data['region']) . $player_data['thumbnail'];
+			return sprintf('https://render.worldofwarcraft.com/character/%s/', $player_data['region']) . $player_data['thumbnail'];
 		}
 
 		return '';
@@ -284,8 +288,8 @@ class wow_api implements game_api_interface
 			if (in_array($mb['character']['name'] . '-' . $mb['character']['realm'], $to_add) && $mb['character']['level'] >= $min_level)
 			{
 				$realm = isset($mb['character']['realm']) ? $mb['character']['realm'] : 'unknown';
-				$portrait_url = sprintf('http://%s.battle.net/static-render/%s/', $region, $region) . $mb['character']['thumbnail'];
-				$armory_url = sprintf('http://%s.battle.net/wow/en/', $region) . 'character/' . $realm . '/' . $mb['character']['name'] . '/simple';
+				$portrait_url = sprintf('https://render.worldofwarcraft.com/character/%s/', $region) . $mb['character']['thumbnail'];
+				$armory_url = sprintf('https://worldofwarcraft.blizzard.com/en-%s/', $region) . 'character/' . $region . '/' . strtolower(str_replace(' ', '-', $realm)) . '/' . strtolower($mb['character']['name']);
 				$title = '';
 				if (isset($mb['titles']))
 				{
@@ -345,8 +349,8 @@ class wow_api implements game_api_interface
 					'player_guild_id'     => (int) $guild_id,
 					'player_gender_id'    => (int) $mb['character']['gender'],
 					'player_achiev'       => (int) $mb['character']['achievementPoints'],
-					'player_armory_url'   => sprintf('http://%s.battle.net/wow/en/', $region) . 'character/' . $realm . '/' . $mb['character']['name'] . '/simple',
-					'player_portrait_url' => sprintf('http://%s.battle.net/static-render/%s/', $region, $region) . $mb['character']['thumbnail'],
+					'player_armory_url'   => sprintf('https://worldofwarcraft.blizzard.com/en-%s/', $region) . 'character/' . $region . '/' . strtolower(str_replace(' ', '-', $realm)) . '/' . strtolower($mb['character']['name']),
+					'player_portrait_url' => sprintf('https://render.worldofwarcraft.com/character/%s/', $region) . $mb['character']['thumbnail'],
 				);
 
 				$sql = 'UPDATE ' . $this->bb_players_table . '

@@ -6,86 +6,80 @@ This extension integrates with the Blizzard Battle.net API to provide:
 
 - **Guild roster sync** — Automatically import guild members with class, race, level, and rank data
 - **Character profiles** — Fetch individual character data including talents, titles, and achievements
-- **Armory links** — Generate links to a character's Battle.net profile page
+- **Armory links** — Generate links to a character's Blizzard profile page
 - **Character portraits** — Display character render images from Blizzard's CDN
 - **Guild emblems** — Generate guild emblem images from API-provided emblem data
 - **Realm status** — Query realm availability
 
-## Current Implementation Status
+## Authentication
 
-### What Works (with valid API key)
-- Guild member list retrieval
-- Character profile retrieval
-- Character portrait URLs
-- Armory URL generation
-- Guild emblem generation via GD library
-- Response caching via phpBB cache
+The API uses **OAuth 2.0 Client Credentials Grant**:
 
-### What Needs Updating
+1. Client sends `POST https://oauth.battle.net/token` with `grant_type=client_credentials` and `Authorization: Basic base64({client_id}:{client_secret})`
+2. Blizzard responds with `{ "access_token": "...", "expires_in": 86400 }`
+3. All subsequent API requests include `Authorization: Bearer {access_token}` and `Battlenet-Namespace: {type}-{region}`
 
-The current API client was written for the **legacy Battle.net Community API** (circa 2016-2018). Blizzard has since made significant changes:
+**Token caching:** Tokens are cached using phpBB's cache service with key `bbguild_wow_oauth_token_{region}`. On 401 response, the cached token is invalidated and the request is retried once.
 
-| Aspect | Current (Legacy) | Modern (Required) |
-|--------|------------------|-------------------|
-| **Base URL** | `https://{region}.api.battle.net/wow/` | `https://{region}.api.blizzard.com/` |
-| **Auth method** | HMAC-SHA1 key signing | OAuth 2.0 Client Credentials |
-| **Auth header** | `Authorization: BNET {key}:{signature}` | `Authorization: Bearer {access_token}` |
-| **Key type** | Mashery API key + private key | OAuth Client ID + Client Secret |
-| **Key portal** | dev.battle.net (discontinued) | [develop.battle.net](https://develop.battle.net/) |
-| **Token endpoint** | N/A | `https://oauth.battle.net/token` |
-| **Guild endpoint** | `/wow/guild/{realm}/{name}` | `/data/wow/guild/{realmSlug}/{guildNameSlug}` |
-| **Character endpoint** | `/wow/character/{realm}/{name}` | `/profile/wow/character/{realmSlug}/{characterName}` |
-| **Namespace header** | N/A | `Battlenet-Namespace: profile-{region}` or `static-{region}` |
+**CN region:** Uses `https://oauth.battlenet.com.cn/token` instead.
 
-### Migration Roadmap
+## API Endpoints
 
-The API modernization is planned but not yet implemented. The work involves:
+| Region | Base URL |
+|--------|----------|
+| US | `https://us.api.blizzard.com/` |
+| EU | `https://eu.api.blizzard.com/` |
+| KR | `https://kr.api.blizzard.com/` |
+| TW | `https://tw.api.blizzard.com/` |
 
-1. **OAuth 2.0 token flow** — Implement client credentials grant to obtain a bearer token
-2. **New base URLs** — Switch from `api.battle.net` to `api.blizzard.com`
-3. **New endpoint paths** — Guild and character endpoints have changed
-4. **Namespace headers** — Modern API requires `Battlenet-Namespace` header
-5. **Slug-based lookups** — Realm and guild names must be lowercased and hyphenated
-6. **Response format changes** — JSON response structure has changed
+### Namespace Types
 
-Until this migration is complete, the API integration may not function with Blizzard's current servers.
+Every API request requires a `Battlenet-Namespace` header:
+
+| Type | Used For | Example |
+|------|----------|---------|
+| `dynamic-{region}` | Realm status | `dynamic-eu` |
+| `profile-{region}` | Guild and character data | `profile-us` |
+| `static-{region}` | Achievement data | `static-kr` |
 
 ## API Architecture
 
 ### Class Hierarchy
 
 ```
-curl (bbguild core)
-  └── battlenet_resource (abstract base)
-        ├── battlenet_guild
-        ├── battlenet_character
-        ├── battlenet_realm
-        └── battlenet_achievement
+battlenet_resource (abstract base — OAuth 2.0 + caching)
+      ├── battlenet_guild
+      ├── battlenet_character
+      ├── battlenet_realm
+      └── battlenet_achievement
 
 battlenet (factory)
-  └── creates guild/character/realm/achievement instances
+      └── creates guild/character/realm/achievement instances
 ```
 
 ### Request Flow
 
 1. Caller creates `battlenet($type, $region, $apikey, $locale, $privkey, $ext_path, $cache)`
-2. Factory instantiates the appropriate resource subclass
+2. Factory instantiates the appropriate resource subclass and sets namespace type
 3. Resource's method (e.g. `getGuild()`) calls `consume($method, $params)`
-4. `consume()` builds the request URL, checks cache, signs request, calls cURL
-5. Response is JSON-decoded and cached for the configured TTL (default 3600s)
+4. `consume()` builds the request URL, checks cache, obtains OAuth token, sends Bearer-authenticated request
+5. On 401, token is refreshed and request retried once
+6. Response is JSON-decoded and cached for the configured TTL (default 3600s)
 
 ### Caching
 
 All API responses are cached using phpBB's cache service:
-- Cache key: base64-encoded full request URL
+- Cache key: `bbguild_wow_api_` + base64-encoded full request URL
 - Default TTL: 3600 seconds (1 hour)
 - Cache is stored in phpBB's configured cache backend (file, APCu, Redis, etc.)
 
-## API Endpoints Used
+OAuth tokens are cached separately:
+- Cache key: `bbguild_wow_oauth_token_{region}`
+- TTL: token expiry minus 5 minutes (typically ~23.9 hours)
 
-### Guild API
+## Guild API
 
-**Request:** `GET /wow/guild/{realm}/{name}?fields={fields}&locale={locale}&apikey={key}`
+**Request:** `GET /{endpoint}/{realm}/{name}?fields={fields}&locale={locale}`
 
 **Extra fields:** `members`, `achievements`, `news`
 
@@ -125,41 +119,41 @@ All API responses are cached using phpBB's cache service:
 
 **Faction mapping:** `side: 0` = Alliance (bbGuild faction 1), `side: 1` = Horde (bbGuild faction 2)
 
-### Character API
+## Character API
 
-**Request:** `GET /wow/character/{realm}/{name}?fields={fields}&locale={locale}&apikey={key}`
+**Request:** `GET /{endpoint}/{realm}/{name}?fields={fields}&locale={locale}`
 
 **Extra fields:** `achievements`, `appearance`, `feed`, `guild`, `hunterPets`, `items`, `mounts`, `pets`, `petSlots`, `professions`, `progression`, `pvp`, `reputation`, `stats`, `talents`, `titles`
 
 **Default fields requested by bbGuild:** `guild`, `titles`, `talents`
 
-**Portrait URL format:** `http://{region}.battle.net/static-render/{region}/{thumbnail}`
+**Portrait URL format:** `https://render.worldofwarcraft.com/character/{region}/{thumbnail}`
 
-**Armory URL format:** `http://{region}.battle.net/wow/en/character/{realm}/{name}/simple`
+**Armory URL format:** `https://worldofwarcraft.blizzard.com/en-{region}/character/{region}/{realmSlug}/{name}`
 
-### Realm API
+## Realm API
 
-**Request:** `GET /wow/realm/status?realms={realm1,realm2}&locale={locale}&apikey={key}`
+**Request:** `GET /realm/status?realms={realm1,realm2}&locale={locale}`
 
-### Achievement API
+## Achievement API
 
-**Request:** `GET /wow/achievement/{id}?locale={locale}&apikey={key}`
+**Request:** `GET /achievement/{id}?locale={locale}`
 
 ## Error Handling
 
-The API returns standard HTTP status codes:
+The API returns structured error responses:
+```json
+{ "code": 401, "type": "BLZWEBAPI00000401", "detail": "Unauthorized" }
+```
 
 | Code | Meaning | bbGuild Behavior |
 |------|---------|------------------|
 | 200 | Success | Data processed normally |
+| 401 | Unauthorized | Token refreshed and request retried once |
 | 403 | Forbidden | Marks armory as disabled, logs error |
 | 404 | Not Found | Returns KO result |
+| 429 | Rate Limited | Returns error |
 | 500+ | Server Error | Returns KO result, logs error |
-
-When an API call fails, bbGuild:
-1. Sets `armoryresult = 'KO'` on the guild/player record
-2. Logs the error to the bbGuild admin log
-3. Continues operation without API data — manual management still works
 
 ## Configuration
 
@@ -169,8 +163,8 @@ Set in ACP > bbGuild > Games > Edit World of Warcraft:
 
 | Field | Description |
 |-------|-------------|
-| **API Key** | Your Blizzard API client ID |
-| **Secret Key** | Your Blizzard API client secret (not currently used in HMAC signing but stored for future OAuth use) |
+| **Client ID** | Your Blizzard API client ID from [develop.battle.net](https://develop.battle.net/access/clients) |
+| **Client Secret** | Your Blizzard API client secret |
 | **Locale** | Determines the language of API responses (e.g. `en_GB`, `de_DE`) |
 
 ### Region
@@ -179,11 +173,10 @@ Set per guild in ACP > bbGuild > Guilds > Edit:
 
 | Region | API Base URL |
 |--------|-------------|
-| US | `https://us.api.battle.net/wow/` |
-| EU | `https://eu.api.battle.net/wow/` |
-| KR | `https://kr.api.battle.net/wow/` |
-| TW | `https://tw.api.battle.net/wow/` |
-| SEA | `https://us.api.battle.net/wow/` (routes to US) |
+| US | `https://us.api.blizzard.com/` |
+| EU | `https://eu.api.blizzard.com/` |
+| KR | `https://kr.api.blizzard.com/` |
+| TW | `https://tw.api.blizzard.com/` |
 
 ### Minimum Armory Level
 
@@ -195,7 +188,7 @@ Set per guild — only characters at or above this level will be imported during
 |------|---------|
 | `game/wow_api.php` | Implements `game_api_interface`, orchestrates API calls |
 | `api/battlenet.php` | Factory — creates resource instances per API type |
-| `api/battlenet_resource.php` | Abstract base — handles URL building, caching, signing, cURL |
+| `api/battlenet_resource.php` | Abstract base — OAuth 2.0 auth, caching, HTTP requests |
 | `api/battlenet_guild.php` | Guild resource — `getGuild()` |
 | `api/battlenet_character.php` | Character resource — `getCharacter()` |
 | `api/battlenet_realm.php` | Realm resource — `getRealmStatus()` |

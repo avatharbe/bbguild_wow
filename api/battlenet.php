@@ -8,13 +8,15 @@
  * @author    Chris Saylor
  * @author    Daniel Cannon <daniel@danielcannon.co.uk>
  * @copyright Copyright (c) 2011, 2015 Chris Saylor, Daniel Cannon, Andreas Vandenberghe
- * @link      https://dev.battle.net/
+ * @link      https://develop.battle.net/
  */
 
 namespace avathar\bbguild_wow\api;
 
 /**
  * Battle.net WoW API PHP SDK
+ *
+ * Factory class that creates the appropriate resource instance.
  *
  * @package avathar\bbguild_wow\api
  */
@@ -24,7 +26,7 @@ class battlenet
 	public $cache;
 
 	/** @var array */
-	protected $region = array('us', 'eu', 'kr', 'tw', 'sea');
+	protected $region = array('us', 'eu', 'kr', 'tw');
 
 	/** @var array */
 	protected $api = array('guild', 'realm', 'character', 'achievement');
@@ -51,11 +53,22 @@ class battlenet
 	private $cacheTtl;
 
 	/**
+	 * Namespace types per resource.
+	 * @see https://develop.battle.net/documentation/guides/using-oauth
+	 */
+	private $namespace_types = array(
+		'realm'       => 'dynamic',
+		'guild'       => 'profile',
+		'character'   => 'profile',
+		'achievement' => 'static',
+	);
+
+	/**
 	 * @param string               $API
 	 * @param string               $region
-	 * @param string               $apikey
+	 * @param string               $apikey    Client ID
 	 * @param string               $locale
-	 * @param string               $privkey
+	 * @param string               $privkey   Client Secret
 	 * @param string               $ext_path
 	 * @param \phpbb\cache\service $cache
 	 * @param int                  $cacheTtl
@@ -80,6 +93,8 @@ class battlenet
 		$this->cache    = $cache;
 		$this->cacheTtl = $cacheTtl;
 
+		$namespace_type = isset($this->namespace_types[$this->api]) ? $this->namespace_types[$this->api] : 'dynamic';
+
 		switch ($this->api)
 		{
 			case 'realm':
@@ -87,24 +102,28 @@ class battlenet
 				$this->Realm->apikey = $apikey;
 				$this->Realm->locale = $locale;
 				$this->Realm->privkey = $privkey;
+				$this->Realm->namespace_type = $namespace_type;
 				break;
 			case 'guild':
 				$this->guild = new battlenet_guild($this->cache, $region, $this->cacheTtl);
 				$this->guild->apikey = $apikey;
 				$this->guild->locale = $locale;
 				$this->guild->privkey = $privkey;
+				$this->guild->namespace_type = $namespace_type;
 				break;
 			case 'character':
 				$this->character = new battlenet_character($this->cache, $region, $this->cacheTtl);
 				$this->character->apikey = $apikey;
 				$this->character->locale = $locale;
 				$this->character->privkey = $privkey;
+				$this->character->namespace_type = $namespace_type;
 				break;
 			case 'achievement':
 				$this->achievement = new battlenet_achievement($this->cache, $region, $this->cacheTtl);
 				$this->achievement->apikey = $apikey;
 				$this->achievement->locale = $locale;
 				$this->achievement->privkey = $privkey;
+				$this->achievement->namespace_type = $namespace_type;
 				break;
 		}
 	}
