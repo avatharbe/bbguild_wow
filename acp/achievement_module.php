@@ -10,6 +10,7 @@
 
 namespace avathar\bbguild_wow\acp;
 
+use avathar\bbguild\model\admin\constants;
 use avathar\bbguild\model\player\guilds;
 use avathar\bbguild_wow\model\achievement;
 use avathar\bbguild\model\games\game;
@@ -232,7 +233,7 @@ class achievement_module
 		$pagination_url = append_sid(
 			"{$phpbb_admin_path}index.$phpEx",
 			$modulename . '&amp;o=' . $GuildAchievements[1]['uri']['current'] .
-			'&amp;' . URI_GUILD . '=' . $Guild->getGuildid());
+			'&amp;' . constants::URI_GUILD . '=' . $Guild->getGuildid());
 		$pagination->generate_template_pagination($pagination_url, 'pagination', 'start', $GuildAchievements[2], 15, $start, true);
 
 		foreach ($GuildAchievements[0] as $id => $achievement)
@@ -260,7 +261,7 @@ class achievement_module
 					'ITEMLEVEL'    => $achievement['rewardItems']['itemlevel'],
 					'COMPLETED'    => $achievement['achievements_completed'],
 					'O_NAME' => append_sid("{$phpbb_admin_path}index.$phpEx", $modulename . '&amp;o=' .
-						$GuildAchievements[1]['uri'][0] . '&amp;' . URI_GUILD . '=' . $Guild->getGuildid()
+						$GuildAchievements[1]['uri'][0] . '&amp;' . constants::URI_GUILD . '=' . $Guild->getGuildid()
 					),
 					'PAGE_NUMBER'           => $pagination->on_page($GuildAchievements[2], 15, $start),
 			));
@@ -270,9 +271,9 @@ class achievement_module
 			array(
 				'LISTACHI_FOOTCOUNT'    => $footcount_text,
 				'L_TITLE'               => $this->user->lang['ACP_LISTACHIEV'],
-				'GUILD_EMBLEM'          => $this->guild->getEmblempath(),
+				'GUILD_EMBLEM'          => (!empty($this->guild->getEmblempath()) && @file_exists($this->guild->getEmblempath())) ? $this->guild->getEmblempath() : '',
 				'GUILD_NAME'            => $this->guild->getName(),
-				'U_VIEW_GUILD'          => append_sid("{$phpbb_admin_path}index.$phpEx", 'i=-avathar-bbguild-acp-guild_module&amp;mode=editguild&amp;action=editguild&amp;' . URI_GUILD . '=' . $this->guild->getGuildid()),
+				'U_VIEW_GUILD'          => append_sid("{$phpbb_admin_path}index.$phpEx", 'i=-avathar-bbguild-acp-guild_module&amp;mode=editguild&amp;action=editguild&amp;' . constants::URI_GUILD . '=' . $this->guild->getGuildid()),
 			)
 		);
 

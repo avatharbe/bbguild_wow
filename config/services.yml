@@ -42,6 +42,7 @@ services:
     avathar.bbguild_wow.achievement:
         class: avathar\bbguild_wow\model\achievement
         arguments:
+            - '@avathar.bbguild.util'
             - '%avathar.bbguild_wow.tables.bb_achievement_track%'
             - '%avathar.bbguild_wow.tables.bb_achievement%'
             - '%avathar.bbguild_wow.tables.bb_achievement_rewards%'

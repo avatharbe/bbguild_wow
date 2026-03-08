@@ -356,10 +356,16 @@ class achievement
 	 * @param string $bb_achievement_criteria_table
 	 * @param string $bb_relations_table
 	 */
-	public function __construct($bb_achievement_track_table, $bb_achievement_table,
+	/** @var \avathar\bbguild\model\admin\util */
+	protected $util;
+
+	public function __construct(
+		\avathar\bbguild\model\admin\util $util,
+		$bb_achievement_track_table, $bb_achievement_table,
 		$bb_achievement_rewards_table, $bb_criteria_track_table, $bb_achievement_criteria_table,
 		$bb_relations_table)
 	{
+		$this->util = $util;
 		$this->bb_achievement_track_table = $bb_achievement_track_table;
 		$this->bb_achievement_table = $bb_achievement_table;
 		$this->bb_achievement_rewards_table = $bb_achievement_rewards_table;
@@ -532,7 +538,7 @@ class achievement
 			4 => array('ac.achievements_completed', 'ac.achievements_completed desc'),
 		);
 
-		$current_order   = $this->switch_order($sort_order);
+		$current_order   = $this->util->switch_order($sort_order);
 		$sql_array['ORDER_BY']  = $current_order['sql'];
 		$sql = $db->sql_build_query('SELECT', $sql_array);
 		$result = $db->sql_query($sql);

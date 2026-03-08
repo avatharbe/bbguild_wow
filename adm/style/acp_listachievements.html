@@ -14,12 +14,12 @@
 <div>
     <form id="listachievements" method="post" action="{{ F_PLAYERS_LIST }}">
 
-        <fieldset style="background-color: #EEEEEE">
+        <fieldset>
             <dl>
                 <dt><label for="achievement_guild_id">{{ lang('GUILD') }}:</label></dt>
                 <dd>
                     <div style="display: table;">
-                        <div style="width:50%; float: left"><a href="{{ U_VIEW_GUILD }}"><img style="width:80px; height:80px" src="{{ GUILD_EMBLEM }}" alt="" /></a></div>
+                        {% if GUILD_EMBLEM %}<div style="width:50%; float: left"><a href="{{ U_VIEW_GUILD }}"><img style="width:80px; height:80px" src="{{ GUILD_EMBLEM }}" alt="" /></a></div>{% endif %}
                         <div style="width:50%; vertical-align: middle; display: table-cell;">
                             <select id="achievement_guild_id" name="achievement_guild_id" class="input" onchange="javascript:form.submit();" >
                                 {% for guild_row in loops.guild_row %}
