@@ -14,3 +14,65 @@
 .profile-wrapper-horde .realm, .profile-wrapper-horde .realm a {
     color: #b30000;
 }
+
+/* Achievements portal module
+--------------------------------------------- */
+.achiev-completed-count {
+    text-align: center;
+    font-size: 0.85em;
+    margin-top: 6px;
+    opacity: 0.8;
+}
+
+.achievements-recent ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.achievements-recent li {
+    padding: 6px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.achievements-recent li:not(.last) {
+    border-bottom: 1px solid rgba(128, 128, 128, 0.2);
+}
+
+.achievements-recent .achiev-icon img {
+    vertical-align: middle;
+    border-radius: 2px;
+}
+
+.achievements-recent .achiev-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.achievements-recent .achiev-info strong {
+    display: block;
+}
+
+.achievements-recent .achiev-desc {
+    display: block;
+    font-size: 0.85em;
+    opacity: 0.7;
+}
+
+.achievements-recent .achiev-meta {
+    text-align: right;
+    white-space: nowrap;
+    font-size: 0.85em;
+}
+
+.achievements-recent .achiev-points {
+    display: block;
+    font-weight: bold;
+}
+
+.achievements-recent .achiev-date {
+    display: block;
+    opacity: 0.7;
+}

@@ -454,9 +454,9 @@ class achievement
 				),
 				array(
 					'FROM'  => array($this->bb_criteria_track_table => 'ct'),
-					'ON'    => " ct.criteria_id = c.criteria_id AND ( ct.guild_id = 1 OR ct.player_id = 0) " ,
+					'ON'    => " ct.criteria_id = c.criteria_id AND ct.guild_id = ac.guild_id " ,
 				)),
-			'WHERE' =>  '1=1 AND a.id = ' . (int) $this->id . " AND a.game_id = '". $this->game_id . "'" ,
+			'WHERE' =>  'a.id = ac.achievement_id AND a.id = ' . (int) $this->id . " AND a.game_id = '". $this->game_id . "'" ,
 		);
 
 		$sql = $db->sql_build_query('SELECT', $sql_array);
@@ -501,11 +501,21 @@ class achievement
 		$db = $this->db;
 		$per_page = 15;
 
+		// Build owner filter: guild or player, but not both with a zero that matches everything
+		if ((int) $player_id > 0)
+		{
+			$owner_filter = 'ac.player_id = ' . (int) $player_id;
+		}
+		else
+		{
+			$owner_filter = 'ac.guild_id = ' . (int) $guild_id;
+		}
+
 		// Count total (simple query, no joins to criteria/rewards)
 		$sql = 'SELECT COUNT(*) AS total
 			FROM ' . $this->bb_achievement_track_table . ' ac
 			INNER JOIN ' . $this->bb_achievement_table . ' a ON a.id = ac.achievement_id
-			WHERE (ac.guild_id = ' . (int) $guild_id . ' OR ac.player_id = ' . (int) $player_id . ')
+			WHERE ' . $owner_filter . '
 				AND a.game_id = \'' . $db->sql_escape($this->game_id) . '\'';
 		$result = $db->sql_query($sql);
 		$achievcount = (int) $db->sql_fetchfield('total');
@@ -527,7 +537,7 @@ class achievement
 				ac.achievements_completed, ac.guild_id, ac.player_id
 			FROM ' . $this->bb_achievement_track_table . ' ac
 			INNER JOIN ' . $this->bb_achievement_table . ' a ON a.id = ac.achievement_id
-			WHERE (ac.guild_id = ' . (int) $guild_id . ' OR ac.player_id = ' . (int) $player_id . ')
+			WHERE ' . $owner_filter . '
 				AND a.game_id = \'' . $db->sql_escape($this->game_id) . '\'
 			ORDER BY ' . $current_order['sql'];
 		$result = $db->sql_query_limit($sql, $per_page, $start);
@@ -536,6 +546,7 @@ class achievement
 		while ($row = $db->sql_fetchrow($result))
 		{
 			$achievements[] = array(
+				'achievement_id'         => $row['achievement_id'],
 				'guild_id'               => $row['guild_id'],
 				'player_id'              => $row['player_id'],
 				'game_id'                => $row['game_id'],

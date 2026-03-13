@@ -47,10 +47,8 @@
         <table class="table1 responsive" width="100%" border="0" cellspacing="1" cellpadding="2">
             <thead>
             <tr>
-                <th style="text-align:left; width:5%">{{ lang('ID') }}</th>
-                <th style="text-align:left; width:5%"><img src="" alt="" /></th>
-                <th style="text-align:left; width:25%"><a href="{{ O_NAME }}">{{ lang('ACHI_TITLE') }}</a></th>
-                <th style="text-align:left; width:35%">{{ lang('ACHI_DESC') }}</th>
+                <th style="text-align:left; width:30%"><a href="{{ O_NAME }}">{{ lang('ACHI_TITLE') }}</a></th>
+                <th style="text-align:left; width:40%">{{ lang('ACHI_DESC') }}</th>
                 <th style="text-align:center; width:8%">{{ lang('ACHI_POINTS') }}</th>
                 <th style="text-align:center; width:12%">{{ lang('COMPLETED') }}</th>
                 <th style="text-align:center; width:5%">{{ lang('DELETE') }}
@@ -61,27 +59,23 @@
             </thead>
             <tfoot>
             <tr>
-                <th colspan="7" class="footer">{{ LISTACHI_FOOTCOUNT }}</th>
+                <th colspan="5" class="footer">{{ LISTACHI_FOOTCOUNT }}</th>
             </tr>
             </tfoot>
             <tbody>
             {% for row in loops.players_row %}
             <tr class="{{ loop.index is even ? 'row1' : 'row2' }}">
-                <td style="text-align:center;">{{ row.GUILD }}</td>
-                <td style="text-align:center;">
-                    {% if row.ICON %}<span class="icon-frame frame-18" style="background-image: url('https://render.worldofwarcraft.com/icons/18/{{ row.ICON }}.jpg');"></span>{% endif %}
-                </td>
                 <td style="text-align:left;"><strong>{{ row.TITLE }}</strong></td>
                 <td style="text-align:left;">{{ row.DESCRIPTION }}</td>
                 <td style="text-align:center;">{{ row.POINTS }}</td>
                 <td style="text-align:center;">{{ row.COMPLETED }}</td>
                 <td style="text-align:center;">
-                    <input type="checkbox" class="radio" name="delete_id[{{ row.GUILD }}]" value="1" />
+                    <input type="checkbox" class="radio" name="delete_id[{{ row.ID }}]" value="1" />
                 </td>
             </tr>
             {% endfor %}
             <tr class="highlight">
-                <td colspan="6"></td>
+                <td colspan="4"></td>
                 <td style="text-align:center;">
                     <input class="button2" name="delete" type="submit" value="{{ lang('DELETE_ACHIEVEMENT') }}" />
                 </td>

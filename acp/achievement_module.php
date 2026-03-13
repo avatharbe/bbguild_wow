@@ -246,7 +246,7 @@ class achievement_module
 
 			$this->template->assign_block_vars(
 				'players_row', array(
-					'GUILD'       => $achievement['guild_id'],
+					'ID'          => $achievement['achievement_id'],
 					'TITLE'       => $achievement['title'],
 					'POINTS'      => $achievement['points'],
 					'DESCRIPTION' => $achievement['description'],
@@ -292,12 +292,15 @@ class achievement_module
 			$this->phpbb_container->getParameter('avathar.bbguild.tables.bb_factions')
 		);
 		$guildlist = $Guild->guildlist(1);
-		// guild dropdown query
+		// guild from dropdown (POST) or from pagination / URL (GET)
 		$getguild_dropdown = $this->request->is_set_post('achievement_guild_id');
 		if ($getguild_dropdown)
 		{
-			// user selected dropdown - get guildid
 			$Guild->setGuildid($this->request->variable('achievement_guild_id', 0));
+		}
+		else if ($this->request->variable(constants::URI_GUILD, 0) > 0)
+		{
+			$Guild->setGuildid($this->request->variable(constants::URI_GUILD, 0));
 		}
 		if ($Guild->guildid == 0)
 		{

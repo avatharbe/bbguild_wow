@@ -94,31 +94,31 @@ class achievements extends module_base
 	}
 
 	/**
-	 * Load achievement category progress for this guild.
+	 * Load achievement progress for this guild.
+	 *
+	 * Uses earned point sum vs Blizzard-reported total for the progress bar,
+	 * plus a simple completed count.
 	 */
 	protected function load_category_progress(): void
 	{
-		// Count total achievements and completed achievements per category
-		// The bb_achievement table stores all known achievements,
-		// bb_achievement_track stores which ones are completed for this guild.
-		$sql = 'SELECT COUNT(a.id) AS total_count,
-				COUNT(at.achievement_id) AS completed_count
-			FROM ' . $this->achievement_table . ' a
-			LEFT JOIN ' . $this->achievement_track_table . ' at
-				ON a.id = at.achievement_id AND at.guild_id = ' . (int) $this->guild_id . '
-			WHERE a.game_id = \'wow\'';
+		// Sum earned achievement points and count completed for this guild
+		$sql = 'SELECT COUNT(at.achievement_id) AS completed_count,
+				SUM(a.points) AS earned_points
+			FROM ' . $this->achievement_track_table . ' at
+			INNER JOIN ' . $this->achievement_table . ' a
+				ON a.id = at.achievement_id
+			WHERE at.guild_id = ' . (int) $this->guild_id . '
+				AND a.game_id = \'wow\'';
 		$result = $this->db->sql_query($sql);
 		$row = $this->db->sql_fetchrow($result);
 		$this->db->sql_freeresult($result);
 
-		$total = (int) ($row['total_count'] ?? 0);
 		$completed = (int) ($row['completed_count'] ?? 0);
-		$pct = $total > 0 ? round(($completed / $total) * 100) : 0;
+		$earned = (int) ($row['earned_points'] ?? 0);
 
 		$this->template->assign_vars(array(
-			'ACHIEV_TOTAL'     => $total,
 			'ACHIEV_COMPLETED' => $completed,
-			'ACHIEV_PCT'       => $pct,
+			'ACHIEV_EARNED'    => $earned,
 		));
 	}
 
@@ -133,7 +133,9 @@ class achievements extends module_base
 			INNER JOIN ' . $this->achievement_table . ' a
 				ON a.id = at.achievement_id
 			WHERE at.guild_id = ' . (int) $this->guild_id . '
+				AND a.game_id = \'wow\'
 				AND at.achievements_completed > 0
+				AND a.title <> \'\'
 			ORDER BY at.achievements_completed DESC';
 		$result = $this->db->sql_query_limit($sql, 5);
 

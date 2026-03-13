@@ -48,4 +48,5 @@ $lang = array_merge(
 	'ACHIEV_TOTAL_COMPLETED'   => 'Totale completati',
 	'ACHIEV_RECENTLY_EARNED'   => 'Ottenuti di recente',
 	'ACHIEV_POINTS_TOTAL'      => 'Punti impresa',
+	'ACHIEV_COMPLETED_LABEL'   => 'imprese completate',
 ));
