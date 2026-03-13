@@ -737,14 +737,15 @@ class achievement
 		}
 
 		// Now fetch full details for achievements missing icon/points/description.
-		// Limit to a batch to avoid PHP timeout; user can re-run to fetch more.
-		$max_detail_fetch = 50;
+		// Use a time guard to stay within PHP's execution limit.
+		$time_start = time();
+		$time_limit = 20; // stop fetching after 20s to leave headroom
 
 		$sql = 'SELECT id FROM ' . $this->bb_achievement_table .
 			" WHERE game_id = '" . $db->sql_escape($this->game->game_id) . "'" .
 			" AND icon = '' AND points = 0" .
 			' ORDER BY id';
-		$result = $db->sql_query_limit($sql, $max_detail_fetch);
+		$result = $db->sql_query($sql);
 
 		$incomplete_ids = array();
 		while ($row = $db->sql_fetchrow($result))
@@ -753,17 +754,30 @@ class achievement
 		}
 		$db->sql_freeresult($result);
 
+		// Reuse a single API instance for all detail fetches (one OAuth token)
+		$detail_api = null;
+		if (!empty($incomplete_ids))
+		{
+			$detail_api = new battlenet('achievement', $region, $apikey,
+				$game->get_apilocale(), $privkey, '', $cache);
+		}
+
 		$detail_count = 0;
 		foreach ($incomplete_ids as $achievement_id)
 		{
-			$detail = $this->fetch_achievement_detail($achievement_id, $game);
+			if ((time() - $time_start) >= $time_limit)
+			{
+				break;
+			}
+
+			$detail = $this->fetch_achievement_detail_from($detail_api, $achievement_id);
 			if ($detail !== false)
 			{
 				$this->update_achievement_detail($detail);
-				$this->insert_criteria($detail);
 				$detail_count++;
 			}
 		}
+		unset($detail_api);
 
 		// Count how many still need details
 		$sql = 'SELECT COUNT(*) AS cnt FROM ' . $this->bb_achievement_table .
@@ -835,6 +849,26 @@ class achievement
 			$game->get_apilocale(), $game->get_privkey(), '', $cache);
 		$response = $api->achievement->getAchievementDetail($achievement_id);
 		unset($api);
+
+		$data = isset($response['response']) ? $response['response'] : null;
+		if (!isset($data) || !is_array($data) || isset($data['code']))
+		{
+			return false;
+		}
+
+		return $data;
+	}
+
+	/**
+	 * Fetch achievement detail using an existing API instance (avoids re-creating OAuth per call).
+	 *
+	 * @param battlenet $api
+	 * @param int       $achievement_id
+	 * @return array|false
+	 */
+	private function fetch_achievement_detail_from(battlenet $api, int $achievement_id)
+	{
+		$response = $api->achievement->getAchievementDetail($achievement_id);
 
 		$data = isset($response['response']) ? $response['response'] : null;
 		if (!isset($data) || !is_array($data) || isset($data['code']))
@@ -1073,19 +1107,12 @@ class achievement
 	private function make_slug(string $name): string
 	{
 		$slug = trim($name);
-		// Transliterate accented characters (é→e, ü→u, etc.)
-		if (function_exists('transliterator_transliterate'))
-		{
-			$slug = transliterator_transliterate('Any-Latin; Latin-ASCII; Lower()', $slug);
-		}
-		else
-		{
-			$slug = strtolower($slug);
-		}
+		// Blizzard slugs are lowercase with accents preserved (bête-noire, not bete-noire)
+		$slug = mb_strtolower($slug, 'UTF-8');
 		// Replace spaces with hyphens
 		$slug = str_replace(' ', '-', $slug);
-		// Remove anything that's not alphanumeric or hyphen
-		$slug = preg_replace('/[^a-z0-9\-]/', '', $slug);
+		// Remove apostrophes and other punctuation, but keep letters (including accented), digits, hyphens
+		$slug = preg_replace('/[^\p{L}\p{N}\-]/u', '', $slug);
 		// Collapse multiple hyphens
 		$slug = preg_replace('/-+/', '-', $slug);
 		return trim($slug, '-');

@@ -212,8 +212,8 @@ class achievement_module
 		// configure achievement service for this game
 		$this->achievement->setGame($this->game, 0);
 
-		// fill popup and set selected to default selection
-		$guildlist = $Guild->guildlist(0);
+		// fill popup and set selected to default selection (exclude Guildless id=0)
+		$guildlist = $Guild->guildlist(1);
 		foreach ($guildlist as $g)
 		{
 			$this->template->assign_block_vars(
@@ -257,6 +257,7 @@ class achievement_module
 
 		$this->template->assign_vars(
 			array(
+				'F_PLAYERS_LIST'        => append_sid("{$phpbb_admin_path}index.$phpEx", $this->moduleurl . 'mode=listachievements'),
 				'LISTACHI_FOOTCOUNT'    => $footcount_text,
 				'L_TITLE'               => $this->user->lang['ACP_LISTACHIEV'],
 				'GUILD_EMBLEM'          => (!empty($this->guild->getEmblempath()) && @file_exists($this->guild->getEmblempath())) ? $this->guild->getEmblempath() : '',
