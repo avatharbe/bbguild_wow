@@ -38,4 +38,14 @@ $lang = array_merge(
 	'CALL_BATTLENET_CHAR_API' => "Chiamare Battle.net API di caratteri per questa gilda. Alterna a inattivo se lastModified era > 90 giorni fa, riattiva se < 90 e il carattere disattivazione dello stato era 'API'.",
 	'ARM_SHOWACH' => 'Mostrare i Punti impresa',
 	'ARM_SHOWACH_EXPLAIN' => 'Visualizzare i totali dei punti impresa nella lista dei membri della gilda.',
+
+	// Portal module names
+	'BBGUILD_PORTAL_ACHIEVEMENTS' => 'Imprese',
+	'BBGUILD_PORTAL_GUILD_NEWS'   => 'Notizie della gilda',
+
+	// Achievements module
+	'ACHIEV_PROGRESS_OVERVIEW' => 'Panoramica progressi',
+	'ACHIEV_TOTAL_COMPLETED'   => 'Totale completati',
+	'ACHIEV_RECENTLY_EARNED'   => 'Ottenuti di recente',
+	'ACHIEV_POINTS_TOTAL'      => 'Punti impresa',
 ));

@@ -42,6 +42,8 @@ services:
     avathar.bbguild_wow.achievement:
         class: avathar\bbguild_wow\model\achievement
         arguments:
+            - '@dbal.conn'
+            - '@cache'
             - '@avathar.bbguild.util'
             - '%avathar.bbguild_wow.tables.bb_achievement_track%'
             - '%avathar.bbguild_wow.tables.bb_achievement%'
@@ -49,3 +51,28 @@ services:
             - '%avathar.bbguild_wow.tables.bb_criteria_track%'
             - '%avathar.bbguild_wow.tables.bb_achievement_criteria%'
             - '%avathar.bbguild_wow.tables.bb_relations_table%'
+            - '%avathar.bbguild_wow.tables.bb_guild_wow%'
+
+    # --- Portal modules ---
+
+    avathar.bbguild_wow.portal.module.achievements:
+        class: avathar\bbguild_wow\portal\modules\achievements
+        arguments:
+            - '@config'
+            - '@dbal.conn'
+            - '@template'
+            - '%avathar.bbguild_wow.tables.bb_achievement%'
+            - '%avathar.bbguild_wow.tables.bb_achievement_track%'
+            - '%avathar.bbguild_wow.tables.bb_guild_wow%'
+        tags:
+            - { name: bbguild.portal.module }
+
+    avathar.bbguild_wow.portal.module.guild_news:
+        class: avathar\bbguild_wow\portal\modules\guild_news
+        arguments:
+            - '@dbal.conn'
+            - '@template'
+            - '%avathar.bbguild.tables.bb_news%'
+            - '%avathar.bbguild_wow.tables.bb_guild_wow%'
+        tags:
+            - { name: bbguild.portal.module }

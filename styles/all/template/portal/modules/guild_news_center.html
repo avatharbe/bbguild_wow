@@ -1,0 +1,18 @@
+{{ definition.C_BLOCK_H_L }}
+{{ definition.BLOCK_ICON }}{{ definition.TITLE }}
+{{ definition.C_BLOCK_H_R }}
+<div class="guild-news-list">
+	{% for news in guild_news %}
+	<div class="guild-news-entry">
+		<div class="guild-news-headline">
+			<strong>{{ news.HEADLINE }}</strong>
+			<span class="guild-news-date">{{ news.DATE }}</span>
+		</div>
+		{% if news.MESSAGE %}
+		<div class="guild-news-message">{{ news.MESSAGE }}</div>
+		{% endif %}
+	</div>
+	{% endfor %}
+</div>
+{{ definition.C_BLOCK_F_L }}
+{{ definition.C_BLOCK_F_R }}

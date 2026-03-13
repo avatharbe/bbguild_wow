@@ -38,4 +38,14 @@ $lang = array_merge(
 	'CALL_BATTLENET_CHAR_API' => 'Anruf Battle.net Character API für 50 am ältesten bearbeitete WoW Characters. Deaktivierung folgt, wenn der Charakter über 180 Tage nicht aktualisiert wurde im Armory.',
 	'ARM_SHOWACH' => 'Erfolgspunkte anzeigen',
 	'ARM_SHOWACH_EXPLAIN' => 'Erfolgspunkttotale in der Gildenliste anzeigen.',
+
+	// Portal module names
+	'BBGUILD_PORTAL_ACHIEVEMENTS' => 'Erfolge',
+	'BBGUILD_PORTAL_GUILD_NEWS'   => 'Gildenneuigkeiten',
+
+	// Achievements module
+	'ACHIEV_PROGRESS_OVERVIEW' => 'Fortschrittsübersicht',
+	'ACHIEV_TOTAL_COMPLETED'   => 'Gesamt abgeschlossen',
+	'ACHIEV_RECENTLY_EARNED'   => 'Kürzlich verdient',
+	'ACHIEV_POINTS_TOTAL'      => 'Erfolgspunkte',
 ));

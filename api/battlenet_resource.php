@@ -252,11 +252,19 @@ abstract class battlenet_resource
 				$data = $this->_authenticatedRequest($requestUri, true);
 			}
 
+			// Only cache successful responses (2xx), not errors
 			if ($data !== false)
 			{
-				$this->cache->put($cachesignature, $data, $this->cacheTtl);
+				$http_code = isset($data['response_headers']['http_code']) ? (int) $data['response_headers']['http_code'] : 0;
+				if ($http_code >= 200 && $http_code < 300)
+				{
+					$this->cache->put($cachesignature, $data, $this->cacheTtl);
+				}
 			}
 		}
+
+		// Store the request URL in the response for debugging
+		$data['request_url'] = $requestUri;
 
 		return $data;
 	}

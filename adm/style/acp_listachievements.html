@@ -1,16 +1,9 @@
 {% INCLUDE 'overall_header.html' %}
 <style>
-    fieldset dt
-    {
-        width: 25%;
-    }
-
-    fieldset dd
-    {
-        margin-left: 25%;
-    }
+    fieldset dt { width: 25%; }
+    fieldset dd { margin-left: 25%; }
 </style>
-<span><h1>{{ lang('TITLE') }}</h1></span>
+<span><h1>{{ L_TITLE }}</h1></span>
 <div>
     <form id="listachievements" method="post" action="{{ F_PLAYERS_LIST }}">
 
@@ -26,32 +19,23 @@
                                 <option value="{{ guild_row.VALUE }}"{{ guild_row.SELECTED }}>{{ guild_row.OPTION }}</option>
                                 {% endfor %}
                             </select>
-
                         </div>
-
                     </div>
                 </dd>
             </dl>
             <dl>
-                <dt><label for="player_guild_id">{{ lang('FILTER') }}:</label></dt>
+                <dt><label>{{ lang('ACTIONS') }}:</label></dt>
                 <dd>
-                    <fieldset class="submit-buttons" style="  text-align: left;">
-                    <input type="submit" name="achievaddmanual"  value="{{ lang('ADD_ACHIEVEMENT_MANUAL') }}" class="button1" />
-                    </fieldset>
-                </dd>
-            </dl>
-            <dl>
-                <dt><label for="player_guild_id">{{ lang('FILTER') }}:</label></dt>
-                <dd>
-                    <fieldset class="submit-buttons" style="  text-align: left;">
-                    <input type="submit" name="achievaddapi"  value="{{ lang('ADD_ACHIEVEMENT_API') }}" class="button1" />
+                    <fieldset class="submit-buttons" style="text-align: left;">
+                    <input type="submit" name="achievaddmanual" value="{{ lang('ADD_ACHIEVEMENT_MANUAL') }}" class="button1" />
+                    <input type="submit" name="achievaddapi" value="{{ lang('ADD_ACHIEVEMENT_API') }}" class="button1" />
                     </fieldset>
                 </dd>
             </dl>
         </fieldset>
 
 
-        {% if loops.achievement_row|length %}
+        {% if loops.players_row|length %}
         <div class="pagination">
             {% if loops.pagination|length %}
             {% INCLUDE 'pagination.html' %}
@@ -63,63 +47,45 @@
         <table class="table1 responsive" width="100%" border="0" cellspacing="1" cellpadding="2">
             <thead>
             <tr>
-                <th style="text-align:left; width:3%"><a href="{{ O_ID }}">{{ lang('ID') }}</a></th>
-                <th style="text-align:left; width:20%"><a href="{{ O_NAME }}">{{ lang('NAME') }}</a></th>
-                <th style="text-align:left; width:15%; white-space: nowrap;"><a href="{{ O_CLASS }}">{{ lang('RACE') }}/{{ lang('CLASS') }}</a></th>
-                <th style="text-align:left; width:5%; white-space: nowrap;"><a href="{{ O_LEVEL }}">{{ lang('LEVEL') }}</a></th>
-                <th style="text-align:left; width:10%"><a href="{{ O_USERNAME }}">{{ lang('USERNAME') }}</a></th>
-                <th style="text-align:left; width:10%"><a href="{{ O_RANK }}">{{ lang('RANK') }}</a></th>
-                <th style="text-align:left; width:15%"><a href="{{ O_LAST_UPDATE }}">{{ lang('LAST_UPDATE') }}</a></th>
-                <th style="text-align:center; width:6%">{{ lang('EDIT') }}</th>
-                <th style="text-align:center; width:6%">{{ lang('DELETE') }}
-  	        <span class="small"><a href="#" onclick="marklist('listplayers', 'delete_id', true); return false;">{{ lang('MARK_ALL') }}</a> <br />
-	        <a href="#" onclick="marklist('listplayers', 'delete_id', false); return false;">{{ lang('UNMARK_ALL') }}</a></span>
+                <th style="text-align:left; width:5%">{{ lang('ID') }}</th>
+                <th style="text-align:left; width:5%"><img src="" alt="" /></th>
+                <th style="text-align:left; width:25%"><a href="{{ O_NAME }}">{{ lang('ACHI_TITLE') }}</a></th>
+                <th style="text-align:left; width:35%">{{ lang('ACHI_DESC') }}</th>
+                <th style="text-align:center; width:8%">{{ lang('ACHI_POINTS') }}</th>
+                <th style="text-align:center; width:12%">{{ lang('COMPLETED') }}</th>
+                <th style="text-align:center; width:5%">{{ lang('DELETE') }}
+                    <span class="small"><a href="#" onclick="marklist('listachievements', 'delete_id', true); return false;">{{ lang('MARK_ALL') }}</a> <br />
+                    <a href="#" onclick="marklist('listachievements', 'delete_id', false); return false;">{{ lang('UNMARK_ALL') }}</a></span>
                 </th>
             </tr>
             </thead>
             <tfoot>
             <tr>
-                <th colspan="10" class="footer">{{ LISTPLAYERS_FOOTCOUNT }}</th>
+                <th colspan="7" class="footer">{{ LISTACHI_FOOTCOUNT }}</th>
             </tr>
             </tfoot>
             <tbody>
-            {% for achievements_row_ in loops.achievements_row_ %}
-            {% if achievements_row_.S_ROW_COUNT is even %}
-            <tr class="row1">
-                {% elseif achievements_row_.S_ROW_COUNT is not even %}
-            <tr class="row2">
-                {% endif %}
-
-                {% if achievements_row_.S_READONLY  == 1 %}
-            <tr class="highlight">
-                {% endif %}
-                <td style="text-align:center;"><input type="checkbox" class="radio" name="activate_id[{{ achievements_row_.ID }}]" value="{{ achievements_row_.ID }}" {{ achievements_row_.STATUS }} /></td>
-
-                <td style="text-align:center;">{{ achievements_row_.ID }}</td>
-                <td class="row2" style="text-align:left;" ><a style="color:{{ achievements_row_.COLORCODE }}"  href="{{ achievements_row_.U_VIEW_PLAYER }}"><strong>{{ achievements_row_.NAME }}</strong></a></td>
-                <td style="text-align:left;" >{% if achievements_row_.S_RACE_IMAGE_EXISTS %}<img src="{{ achievements_row_.RACE_IMAGE }}" alt="" />&nbsp;{% else %}&nbsp;{% endif %}{% if achievements_row_.S_CLASS_IMAGE_EXISTS %}<img src="{{ achievements_row_.CLASS_IMAGE }}" alt="" />{% else %}&nbsp;{% endif %}&nbsp;<span style="color:{{ achievements_row_.COLORCODE }}" >{{ achievements_row_.CLASS }}</span></td>
-                <td style="text-align:center;" >{{ achievements_row_.LEVEL }}</td>
-                <td style="text-align:left;" ><a href="{{ achievements_row_.U_VIEW_USER }}">{{ achievements_row_.USERNAME }}</a></td>
-                <td style="text-align:left;" >{{ achievements_row_.RANK }}</td>
-                <td style="text-align:left;" >{{ achievements_row_.LAST_UPDATE }}</td>
-                <td style="text-align:center; white-space: nowrap;">
-                    <a href="{{ achievements_row_.U_VIEW_PLAYER }}">{{ ICON_EDIT }}</a>
+            {% for row in loops.players_row %}
+            <tr class="{{ loop.index is even ? 'row1' : 'row2' }}">
+                <td style="text-align:center;">{{ row.GUILD }}</td>
+                <td style="text-align:center;">
+                    {% if row.ICON %}<span class="icon-frame frame-18" style="background-image: url('https://render.worldofwarcraft.com/icons/18/{{ row.ICON }}.jpg');"></span>{% endif %}
                 </td>
-                <td style="text-align:center; white-space: nowrap;">
-
-                    <input type="checkbox" class="radio" name="delete_id[{{ achievements_row_.ID }}]" value="1" {{ achievements_row_.DELETED }} />
-                    {% if achievements_row_.S_READONLY == 0 %} <a href="{{ achievements_row_.U_DELETE_PLAYER }}">{{ ICON_DELETE }}</a> {% endif %}
+                <td style="text-align:left;"><strong>{{ row.TITLE }}</strong></td>
+                <td style="text-align:left;">{{ row.DESCRIPTION }}</td>
+                <td style="text-align:center;">{{ row.POINTS }}</td>
+                <td style="text-align:center;">{{ row.COMPLETED }}</td>
+                <td style="text-align:center;">
+                    <input type="checkbox" class="radio" name="delete_id[{{ row.GUILD }}]" value="1" />
                 </td>
             </tr>
             {% endfor %}
             <tr class="highlight">
-                <td style="text-align:center;"><input class="button2" name="deactivate"
-                    type="submit" value="{{ lang('UPDATE') }}" title="{{ lang('CHANGE_STATUS') }}" {{ lang('TOGGLE_ACTIVE') }} /></td>
-                <td colspan="8"></td>
-                <td style="text-align:center;"> <input class="button2" name="delete" type="submit"
-                                                       value="{{ lang('DELETE_SELECTED_PLAYERS') }}" title="{{ lang('MASS_DELETE_CHAR') }}"/></td>
+                <td colspan="6"></td>
+                <td style="text-align:center;">
+                    <input class="button2" name="delete" type="submit" value="{{ lang('DELETE_ACHIEVEMENT') }}" />
+                </td>
             </tr>
-
             </tbody>
         </table>
 

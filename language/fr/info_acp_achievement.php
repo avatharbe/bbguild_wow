@@ -29,5 +29,28 @@ $lang = array_merge(
 	$lang, array(
 	'ACP_ADDACHIEV'            => 'Hauts faits',
 	'ACP_LISTACHIEV'           => 'Liste des hauts faits',
+	'ACP_MM_EDITACHI'          => 'Modifier un haut fait',
+
+	'ACHIEV_ADDED'             => 'Haut fait ajouté avec succès.',
+	'ACHIEV_UPDATED'           => 'Haut fait mis à jour avec succès.',
+	'ACHIEV_DELETED'           => 'Haut(s) fait(s) supprimé(s) avec succès.',
+	'ACHIEV_FOOTCOUNT'         => '%d hauts faits trouvés.',
+	'CONFIRM_DELETE_ACHIEVEMENT' => 'Êtes-vous sûr de vouloir supprimer le haut fait "%s" ?',
+	'WARNING_NOACHIEVEMENTS'   => 'Aucun haut fait trouvé. Utilisez le bouton API ou ajoutez des hauts faits manuellement.',
+
+	'ADD_ACHIEVEMENT'          => 'Ajouter un haut fait',
+	'ADD_ACHIEVEMENT_MANUAL'   => 'Ajout manuel',
+	'ADD_ACHIEVEMENT_API'      => 'Charger depuis l\'API',
+	'UPDATE_ACHIEVEMENT'       => 'Mettre à jour le haut fait',
+	'DELETE_ACHIEVEMENT'       => 'Supprimer le haut fait',
+	'ACHIEVEMENT_ADD_EXPLAIN'  => 'Ajouter ou modifier les détails d\'un haut fait. Les hauts faits peuvent être importés automatiquement via l\'API Battle.net.',
+	'ACHI_ID'                  => 'ID du haut fait',
+	'ACHI_TITLE'               => 'Titre',
+	'ACHI_DESC'                => 'Description',
+	'ACHI_POINTS'              => 'Points',
+
+	'FV_REQUIRED_TITLE'        => 'Veuillez entrer un titre.',
+	'FV_REQUIRED_DESCRIPTION'  => 'Veuillez entrer une description.',
+	'FV_REQUIRED_ID'           => 'Veuillez entrer un ID de haut fait.',
 	)
 );

@@ -405,7 +405,11 @@ class wow_api implements game_api_interface
 					'player_armory_url'   => $armory_url,
 					'phpbb_user_id'       => 0,
 					'game_id'             => 'wow',
-					'player_portrait_url' => '',
+					'player_portrait_url' => $this->get_player_portrait_url([
+						'realm_slug' => $realm_slug,
+						'name'       => $char['name'],
+						'region'     => $region,
+					]),
 					'player_title'        => '',
 					'last_update'         => time(),
 				));
@@ -437,6 +441,11 @@ class wow_api implements game_api_interface
 					'player_rank_id'      => (int) $mb['rank'],
 					'player_guild_id'     => (int) $guild_id,
 					'player_armory_url'   => $this->get_player_armory_url($char['name'], $realm_slug, $region),
+					'player_portrait_url' => $this->get_player_portrait_url([
+						'realm_slug' => $realm_slug,
+						'name'       => $char['name'],
+						'region'     => $region,
+					]),
 					'last_update'         => time(),
 				);
 

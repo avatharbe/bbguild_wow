@@ -40,4 +40,14 @@ $lang = array_merge(
 	'CALL_BATTLENET_CHAR_API' => 'Llamar a la API de personajes de Battle.net para esta hermandad. Desactiva si lastModified fue hace más de 90 días, reactiva si es menos de 90 y el estado de desactivación del personaje fue \'API\'.',
 	'ARM_SHOWACH' => 'Mostrar puntos de logro',
 	'ARM_SHOWACH_EXPLAIN' => 'Mostrar los totales de puntos de logro en la lista de la hermandad.',
+
+	// Portal module names
+	'BBGUILD_PORTAL_ACHIEVEMENTS' => 'Logros',
+	'BBGUILD_PORTAL_GUILD_NEWS'   => 'Noticias del gremio',
+
+	// Achievements module
+	'ACHIEV_PROGRESS_OVERVIEW' => 'Resumen de progreso',
+	'ACHIEV_TOTAL_COMPLETED'   => 'Total completados',
+	'ACHIEV_RECENTLY_EARNED'   => 'Obtenidos recientemente',
+	'ACHIEV_POINTS_TOTAL'      => 'Puntos de logro',
 ));

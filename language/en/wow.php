@@ -40,4 +40,14 @@ $lang = array_merge(
 	'CALL_BATTLENET_CHAR_API' => 'Call Battle.net Character API for this Guild. Toggles to inactive if lastModified flag was > 90 days ago, reactivates if < 90 and character deactivation status was \'API\'.',
 	'ARM_SHOWACH' => 'Show Achievement Points',
 	'ARM_SHOWACH_EXPLAIN' => 'Display achievement point totals on the guild roster.',
+
+	// Portal module names
+	'BBGUILD_PORTAL_ACHIEVEMENTS' => 'Achievements',
+	'BBGUILD_PORTAL_GUILD_NEWS'   => 'Guild News',
+
+	// Achievements module
+	'ACHIEV_PROGRESS_OVERVIEW' => 'Progress Overview',
+	'ACHIEV_TOTAL_COMPLETED'   => 'Total Completed',
+	'ACHIEV_RECENTLY_EARNED'   => 'Recently Earned',
+	'ACHIEV_POINTS_TOTAL'      => 'Achievement Points',
 ));

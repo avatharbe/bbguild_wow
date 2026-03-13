@@ -40,4 +40,14 @@ $lang = array_merge(
 	'CALL_BATTLENET_CHAR_API' => 'Wywołaj API postaci Battle.net dla tej gildii. Przełącza na nieaktywny jeśli lastModified było ponad 90 dni temu, reaktywuje jeśli poniżej 90 dni i status dezaktywacji postaci to \'API\'.',
 	'ARM_SHOWACH' => 'Pokaż punkty osiągnięć',
 	'ARM_SHOWACH_EXPLAIN' => 'Wyświetlaj sumy punktów osiągnięć na liście gildii.',
+
+	// Portal module names
+	'BBGUILD_PORTAL_ACHIEVEMENTS' => 'Osiągnięcia',
+	'BBGUILD_PORTAL_GUILD_NEWS'   => 'Wiadomości gildii',
+
+	// Achievements module
+	'ACHIEV_PROGRESS_OVERVIEW' => 'Przegląd postępów',
+	'ACHIEV_TOTAL_COMPLETED'   => 'Ukończone łącznie',
+	'ACHIEV_RECENTLY_EARNED'   => 'Ostatnio zdobyte',
+	'ACHIEV_POINTS_TOTAL'      => 'Punkty osiągnięć',
 ));

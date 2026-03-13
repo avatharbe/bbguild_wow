@@ -116,7 +116,6 @@ class listener implements EventSubscriberInterface
 				'ACHIEV'              => $row['achievementpoints'],
 				'ARMORY'              => $row['guildarmoryurl'],
 				'ARMORY_URL'          => $row['guildarmoryurl'],
-				'S_DISPLAY_ACHIEVEMENTS' => !empty($row['achievementpoints']),
 			));
 		}
 	}

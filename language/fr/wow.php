@@ -38,4 +38,14 @@ $lang = array_merge(
 	'CALL_BATTLENET_CHAR_API' => 'Appel Battle.net Character API pour 50 membres WoW ayant la mise à jour la plus ancienne. Désactivation si la dernière activité sur l\'armurerie remonte à 180 jours.',
 	'ARM_SHOWACH' => 'Montrer les points des Hauts Faits ?',
 	'ARM_SHOWACH_EXPLAIN' => 'Afficher les totaux de points de haut fait dans la liste de guilde.',
+
+	// Portal module names
+	'BBGUILD_PORTAL_ACHIEVEMENTS' => 'Hauts Faits',
+	'BBGUILD_PORTAL_GUILD_NEWS'   => 'Nouvelles de la guilde',
+
+	// Achievements module
+	'ACHIEV_PROGRESS_OVERVIEW' => 'Aperçu de la progression',
+	'ACHIEV_TOTAL_COMPLETED'   => 'Total accompli',
+	'ACHIEV_RECENTLY_EARNED'   => 'Obtenus récemment',
+	'ACHIEV_POINTS_TOTAL'      => 'Points de hauts faits',
 ));

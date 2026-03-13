@@ -228,7 +228,7 @@ class achievement_module
 		$GuildAchievements = $this->achievement->get_tracked_achievements($start, $Guild->guildid, 0);
 		$footcount_text   = sprintf($this->user->lang['ACHIEV_FOOTCOUNT'], $GuildAchievements[2]);
 
-		$modulename = 'i=-avathar-bbguild_wow-acp-achievement_module&amp;mode=list_achievements';
+		$modulename = 'i=-avathar-bbguild_wow-acp-achievement_module&amp;mode=listachievements';
 		$pagination = $this->phpbb_container->get('pagination');
 		$pagination_url = append_sid(
 			"{$phpbb_admin_path}index.$phpEx",
@@ -238,32 +238,20 @@ class achievement_module
 
 		foreach ($GuildAchievements[0] as $id => $achievement)
 		{
+			$completed = (int) $achievement['achievements_completed'];
+			if ($completed > 9999999999)
+			{
+				$completed = (int) ($completed / 1000);
+			}
+
 			$this->template->assign_block_vars(
 				'players_row', array(
-					'GUILD'    => $achievement['guild_id'],
-					'PLAYER'    => $achievement['player_id'],
-					'GAME'    => $achievement['game_id'],
-					'TITLE'    => $achievement['title'],
-					'POINTS'    => $achievement['points'],
-					'DESCRIPTION'    => $achievement['description'],
-					'ICON'    => $achievement['icon'],
-					'FACTION'    => $achievement['factionId'],
-					'CID'    => $achievement['criteria']['criteria_id'],
-					'CDESCR'    => $achievement['criteria']['criteriadescription'],
-					'CORDER'    => $achievement['criteria']['criteriaorder'],
-					'CMAX'    => $achievement['criteria']['criteriamax'],
-					'CQUANT'    => $achievement['criteria']['criteria_quantity'],
-					'CTIMESTAMP'    => $achievement['criteria']['criteria_timestamp'],
-					'CCREATED'    => $achievement['criteria']['criteria_created'],
-					'REWARDS'    => $achievement['criteria']['criteria_timestamp'],
-					'REWARDSITEM'    => $achievement['rewardItems']['rewards_item_id'],
-					'REWARDDESCR'    => $achievement['rewardItems']['rewardsdescription'],
-					'ITEMLEVEL'    => $achievement['rewardItems']['itemlevel'],
-					'COMPLETED'    => $achievement['achievements_completed'],
-					'O_NAME' => append_sid("{$phpbb_admin_path}index.$phpEx", $modulename . '&amp;o=' .
-						$GuildAchievements[1]['uri'][0] . '&amp;' . constants::URI_GUILD . '=' . $Guild->getGuildid()
-					),
-					'PAGE_NUMBER'           => $pagination->on_page($GuildAchievements[2], 15, $start),
+					'GUILD'       => $achievement['guild_id'],
+					'TITLE'       => $achievement['title'],
+					'POINTS'      => $achievement['points'],
+					'DESCRIPTION' => $achievement['description'],
+					'ICON'        => $achievement['icon'],
+					'COMPLETED'   => $completed > 0 ? date('d/m/Y', $completed) : '',
 			));
 		}
 
@@ -405,9 +393,11 @@ class achievement_module
 
 		$this->template->assign_vars(
 			array(
-				'S_ADD'    => $achievement_id == 0 ? true :false,
+				'S_ADD'    => $achievement_id == 0 ? true : false,
 				'ID'    => $achievement_id,
-				'POINTS'    => $achievement_id,
+				'POINTS'    => ($achievement_id > 0 && isset($this->achievement)) ? $this->achievement->getPoints() : 0,
+				'TITLE'    => ($achievement_id > 0 && isset($this->achievement)) ? $this->achievement->getTitle() : '',
+				'DESCRIPTION'    => ($achievement_id > 0 && isset($this->achievement)) ? $this->achievement->getDescription() : '',
 				'MSG_TITLE_EMPTY'           => $this->user->lang['FV_REQUIRED_TITLE'],
 				'MSG_DESCRIPTION_EMPTY'  => $this->user->lang['FV_REQUIRED_DESCRIPTION'],
 				'MSG_ID_EMPTY'           => $this->user->lang['FV_REQUIRED_ID'],
@@ -416,50 +406,144 @@ class achievement_module
 	}
 
 	/**
-	 *
-	 * execute add achievement
+	 * Insert a new achievement from the form.
 	 */
 	private function Addachievement()
 	{
+		$achievement_id = $this->request->variable('achievement_id', 0);
+		$title          = $this->request->variable('title', '', true);
+		$description    = $this->request->variable('description', '', true);
+		$points         = $this->request->variable('points', 0);
+		$faction_id     = $this->request->variable('faction_id', 0);
 
+		if ($achievement_id === 0 || $title === '')
+		{
+			return;
+		}
+
+		$sql_ary = array(
+			'id'          => $achievement_id,
+			'game_id'     => $this->game->game_id,
+			'title'       => $title,
+			'points'      => $points,
+			'description' => $description,
+			'factionid'   => $faction_id,
+			'icon'        => '',
+			'reward'      => '',
+		);
+
+		$this->db->sql_query('INSERT INTO ' . $this->phpbb_container->getParameter('avathar.bbguild_wow.tables.bb_achievement') . ' ' .
+			$this->db->sql_build_array('INSERT', $sql_ary));
+
+		trigger_error($this->user->lang['ACHIEV_ADDED'] . $this->link);
 	}
 
 	/**
-	 * execute update achievement
+	 * Update an existing achievement from the form.
 	 */
 	private function UpdateAchievement()
 	{
+		$achievement_id = $this->request->variable('hidden_achievement_id', 0);
+		$title          = $this->request->variable('title', '', true);
+		$description    = $this->request->variable('description', '', true);
+		$points         = $this->request->variable('points', 0);
+		$faction_id     = $this->request->variable('faction_id', 0);
 
+		if ($achievement_id === 0)
+		{
+			return;
+		}
+
+		$sql_ary = array(
+			'title'       => $title,
+			'points'      => $points,
+			'description' => $description,
+			'factionid'   => $faction_id,
+		);
+
+		$this->db->sql_query('UPDATE ' . $this->phpbb_container->getParameter('avathar.bbguild_wow.tables.bb_achievement') .
+			' SET ' . $this->db->sql_build_array('UPDATE', $sql_ary) .
+			' WHERE id = ' . (int) $achievement_id);
+
+		trigger_error($this->user->lang['ACHIEV_UPDATED'] . $this->link);
 	}
 
 	/**
-	 * execute delete achievement
+	 * Delete a single achievement and its tracking/criteria data.
 	 */
 	private function DeleteAchievement()
 	{
+		$achievement_id = $this->request->variable('del_achievement_id', 0);
+		if ($achievement_id === 0)
+		{
+			return;
+		}
 
+		$this->delete_achievement_by_id($achievement_id);
+		trigger_error($this->user->lang['ACHIEV_DELETED'] . $this->link);
 	}
 
 	/**
+	 * Batch delete selected achievements from the listing.
 	 *
-	 * function to batch delete achievements, called from listing
 	 * @param \avathar\bbguild\model\player\guilds $Guild
-	 *
 	 */
 	private function achievement_batch_delete(guilds $Guild)
 	{
+		$delete_ids = $this->request->variable('delete_id', array(0 => 0));
+		if (empty($delete_ids))
+		{
+			return;
+		}
 
+		foreach (array_keys($delete_ids) as $achievement_id)
+		{
+			$this->delete_achievement_by_id((int) $achievement_id);
+		}
+
+		trigger_error($this->user->lang['ACHIEV_DELETED'] . $this->link);
 	}
 
 	/**
-	 * load guild achievements from API
+	 * Remove an achievement and all related tracking, criteria, relations, and rewards.
+	 *
+	 * @param int $achievement_id
+	 */
+	private function delete_achievement_by_id(int $achievement_id): void
+	{
+		$tables = array(
+			$this->phpbb_container->getParameter('avathar.bbguild_wow.tables.bb_achievement')       => 'id',
+			$this->phpbb_container->getParameter('avathar.bbguild_wow.tables.bb_achievement_track') => 'achievement_id',
+		);
+
+		foreach ($tables as $table => $column)
+		{
+			$this->db->sql_query('DELETE FROM ' . $table . ' WHERE ' . $column . ' = ' . (int) $achievement_id);
+		}
+
+		// Delete relations (criteria + rewards links)
+		$this->db->sql_query('DELETE FROM ' . $this->phpbb_container->getParameter('avathar.bbguild_wow.tables.bb_relations_table') .
+			" WHERE attribute_id = 'ACH' AND att_value = " . (int) $achievement_id);
+	}
+
+	/**
+	 * Load guild achievements from Battle.net API.
+	 *
 	 * @param \avathar\bbguild\model\player\guilds $Guild
 	 */
 	private function LoadAPIGuildachievements(guilds $Guild)
 	{
-		//call achievement API
 		$this->achievement->setGame($this->game, 0);
 		$this->achievement->setGuildId($this->guild->guildid);
-		$this->achievement->setAchievements($Guild, $this->game);
+		$result = $this->achievement->setAchievements($Guild, $this->game);
+
+		if ($result['success'])
+		{
+			trigger_error($result['message'] . $this->link);
+		}
+		else
+		{
+			trigger_error($result['message'] . $this->link, E_USER_WARNING);
+		}
 	}
 }

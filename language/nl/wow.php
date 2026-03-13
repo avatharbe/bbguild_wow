@@ -40,4 +40,14 @@ $lang = array_merge(
 	'CALL_BATTLENET_CHAR_API' => 'Roep de Battle.net Character API aan voor deze gilde. Schakelt over naar inactief als lastModified langer dan 90 dagen geleden was, heractiveert als minder dan 90 dagen en de deactivatiestatus \'API\' was.',
 	'ARM_SHOWACH' => 'Prestatiepunten tonen',
 	'ARM_SHOWACH_EXPLAIN' => 'Prestatiepunttotalen tonen in de gildelijst.',
+
+	// Portal module names
+	'BBGUILD_PORTAL_ACHIEVEMENTS' => 'Prestaties',
+	'BBGUILD_PORTAL_GUILD_NEWS'   => 'Gilde nieuws',
+
+	// Achievements module
+	'ACHIEV_PROGRESS_OVERVIEW' => 'Voortgangsoverzicht',
+	'ACHIEV_TOTAL_COMPLETED'   => 'Totaal voltooid',
+	'ACHIEV_RECENTLY_EARNED'   => 'Recent behaald',
+	'ACHIEV_POINTS_TOTAL'      => 'Prestatiepunten',
 ));

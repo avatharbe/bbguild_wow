@@ -1,0 +1,50 @@
+{{ definition.C_BLOCK_H_L }}
+{{ definition.BLOCK_ICON }}{{ definition.TITLE }}
+{{ definition.C_BLOCK_H_R }}
+<div id="cat-summary" class="container">
+	<h3 class="category">{{ lang('ACHIEV_PROGRESS_OVERVIEW') }}</h3>
+	<div class="achievements-total">
+		<div class="profile-box-full">
+			<div class="achievements-total-completed">
+				<div class="desc">{{ lang('ACHIEV_TOTAL_COMPLETED') }}</div>
+				<div class="profile-progress border-4">
+					<div class="bar border-4 hover" style="width: {{ ACHIEV_PCT }}%"></div>
+					<div class="bar-contents">
+						<strong>{{ ACHIEV_COMPLETED }} / {{ ACHIEV_TOTAL }} ({{ ACHIEV_PCT }}%)</strong>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	{% if recent_achievements %}
+	<h3 class="category">{{ lang('ACHIEV_RECENTLY_EARNED') }}</h3>
+	<div class="achievements-recent profile-box-full">
+		<ul>
+			{% for achievement in recent_achievements %}
+			<li{% if loop.last %} class="last"{% endif %}>
+				<span class="float-right">
+					<span class="points">{{ achievement.POINTS }}</span>
+					<span class="date">{{ achievement.DATE }}</span>
+				</span>
+				{% if achievement.ICON %}
+				<span class="icon">
+					<span class="icon-frame frame-18" style="background-image: url('https://render.worldofwarcraft.com/icons/18/{{ achievement.ICON }}.jpg');"></span>
+				</span>
+				{% endif %}
+				<span class="info">
+					<strong class="title">{{ achievement.TITLE }}</strong>
+					<span class="description">{{ achievement.DESCRIPTION }}</span>
+				</span>
+			</li>
+			{% endfor %}
+		</ul>
+	</div>
+	{% endif %}
+
+	<div class="achievement-points-total">
+		<strong>{{ lang('ACHIEV_POINTS_TOTAL') }}:</strong> {{ ACHIEV_POINTS }}
+	</div>
+</div>
+{{ definition.C_BLOCK_F_L }}
+{{ definition.C_BLOCK_F_R }}

@@ -55,6 +55,30 @@ class battlenet_guild extends battlenet_resource
 	}
 
 	/**
+	 * Fetch guild achievements.
+	 *
+	 * @param string $realm_slug Lowercase hyphenated realm slug
+	 * @param string $name_slug  Lowercase hyphenated guild name slug
+	 * @return array
+	 */
+	public function getAchievements(string $realm_slug, string $name_slug): array
+	{
+		global $user;
+
+		if ($name_slug === '')
+		{
+			trigger_error($user->lang['WOWAPI_NO_GUILD']);
+		}
+
+		if ($realm_slug === '')
+		{
+			trigger_error($user->lang['WOWAPI_NO_REALMS']);
+		}
+
+		return $this->consume($realm_slug . '/' . $name_slug . '/achievements', array());
+	}
+
+	/**
 	 * Fetch guild roster.
 	 *
 	 * @param string $realm_slug Lowercase hyphenated realm slug

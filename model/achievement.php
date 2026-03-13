@@ -27,6 +27,7 @@ class achievement
 	public $bb_criteria_track_table;
 	public $bb_achievement_criteria_table;
 	public $bb_relations_table;
+	public $bb_guild_wow_table;
 
 	/**
 	 * achievement id
@@ -359,12 +360,22 @@ class achievement
 	/** @var \avathar\bbguild\model\admin\util */
 	protected $util;
 
+	/** @var \phpbb\db\driver\driver_interface */
+	protected $db;
+
+	/** @var \phpbb\cache\service */
+	protected $cache;
+
 	public function __construct(
+		\phpbb\db\driver\driver_interface $db,
+		\phpbb\cache\service $cache,
 		\avathar\bbguild\model\admin\util $util,
 		$bb_achievement_track_table, $bb_achievement_table,
 		$bb_achievement_rewards_table, $bb_criteria_track_table, $bb_achievement_criteria_table,
-		$bb_relations_table)
+		$bb_relations_table, $bb_guild_wow_table)
 	{
+		$this->db = $db;
+		$this->cache = $cache;
 		$this->util = $util;
 		$this->bb_achievement_track_table = $bb_achievement_track_table;
 		$this->bb_achievement_table = $bb_achievement_table;
@@ -372,6 +383,7 @@ class achievement
 		$this->bb_criteria_track_table = $bb_criteria_track_table;
 		$this->bb_achievement_criteria_table = $bb_achievement_criteria_table;
 		$this->bb_relations_table = $bb_relations_table;
+		$this->bb_guild_wow_table = $bb_guild_wow_table;
 	}
 
 	/**
@@ -393,7 +405,7 @@ class achievement
 	 */
 	public function get_achievement()
 	{
-		global $db;
+		$db = $this->db;
 		$i=0;
 
 		$sql_array = array (
@@ -459,8 +471,18 @@ class achievement
 			$this->icon         = $row['icon'];
 			$this->factionId    = $row['factionid'];
 			$this->reward       = $row['reward'];
-			$this->criteria     = array( $row['criteria_id'], $row['criteria'], $row['criteriaorder'], $row['criteriamax']);
-			$this->rewardItems  = array( $row['rewards_item_id'], $row['rewards'], $row['rewardorder'], $row['rewardmax']);
+			$this->criteria     = array(
+				'criteria_id'          => $row['criteria_id'],
+				'criteriadescription'  => $row['criteriadescription'],
+				'criteriaorder'        => $row['criteriaorder'],
+				'criteriamax'          => $row['criteriamax'],
+			);
+			$this->rewardItems  = array(
+				'rewards_item_id'      => $row['rewards_item_id'],
+				'rewardsdescription'   => $row['rewardsdescription'],
+				'itemlevel'            => $row['itemlevel'],
+				'quality'              => $row['quality'],
+			);
 		}
 		$db->sql_freeresult($result);
 		return $i;
@@ -476,60 +498,20 @@ class achievement
 	 */
 	public function get_tracked_achievements($start, $guild_id, $player_id = 0)
 	{
+		$db = $this->db;
+		$per_page = 15;
 
-		global $db;
+		// Count total (simple query, no joins to criteria/rewards)
+		$sql = 'SELECT COUNT(*) AS total
+			FROM ' . $this->bb_achievement_track_table . ' ac
+			INNER JOIN ' . $this->bb_achievement_table . ' a ON a.id = ac.achievement_id
+			WHERE (ac.guild_id = ' . (int) $guild_id . ' OR ac.player_id = ' . (int) $player_id . ')
+				AND a.game_id = \'' . $db->sql_escape($this->game_id) . '\'';
+		$result = $db->sql_query($sql);
+		$achievcount = (int) $db->sql_fetchfield('total');
+		$db->sql_freeresult($result);
 
-		$sql_array = array (
-			'SELECT' => '
-			a.id   AS achievement_id,
-			a.game_id,
-			a.title,
-			a.points,
-			a.description,
-			a.icon,
-			a.factionid,
-			a.reward,
-			ac.achievements_completed,
-			r2.rel_value      AS rewards_item_id ,
-			w.description     AS rewardsdescription,
-			w.rewards_item_id AS rewards_item_id,
-			w.itemlevel       AS itemlevel,
-			w.quality         AS quality,
-			r1.rel_value      AS criteria_id,
-			c.description     AS criteriadescription,
-			c.orderindex      AS criteriaorder,
-			c.max             AS criteriamax,
-			ct.criteria_quantity,
-			ct.criteria_timestamp,
-			ct.criteria_created ',
-			'FROM' => array (
-				$this->bb_achievement_table => 'a',
-				$this->bb_achievement_track_table => 'ac',
-				),
-			'LEFT_JOIN' => array(
-				array(
-					'FROM'  => array($this->bb_relations_table => 'r2'),
-					'ON'    => "  a.id = r2.att_value AND r2.attribute_id = 'ACH' AND r2.rel_attr_id = 'REW' " ,
-				),
-				array(
-					'FROM'  => array($this->bb_achievement_rewards_table => 'w'),
-					'ON'    => " w.rewards_item_id = r2.rel_value " ,
-				),
-				array(
-					'FROM'  => array($this->bb_relations_table => 'r1'),
-					'ON'    => " a.id = r1.att_value AND r1.attribute_id = 'ACH' AND r1.rel_attr_id = 'CRI' " ,
-				),
-				array(
-					'FROM'  => array($this->bb_achievement_criteria_table => 'c'),
-					'ON'    => " c.criteria_id = r1.rel_value " ,
-				),
-				array(
-					'FROM'  => array($this->bb_criteria_track_table => 'ct'),
-					'ON'    => " ct.criteria_id = c.criteria_id AND ( ct.guild_id = 1 OR ct.player_id = 0) " ,
-				)),
-			'WHERE' =>  '1=1 AND (ac.guild_id = ' . $guild_id .' OR ac.player_id= ' . $player_id . ") AND a.game_id = '". $this->game_id . "'" ,
-		);
-
+		// Sort
 		$sort_order = array(
 			0 => array('a.id', 'a.id desc'),
 			1 => array('a.title', 'a.title desc'),
@@ -537,205 +519,325 @@ class achievement
 			3 => array('a.points', 'a.points desc'),
 			4 => array('ac.achievements_completed', 'ac.achievements_completed desc'),
 		);
+		$current_order = $this->util->switch_order($sort_order);
 
-		$current_order   = $this->util->switch_order($sort_order);
-		$sql_array['ORDER_BY']  = $current_order['sql'];
-		$sql = $db->sql_build_query('SELECT', $sql_array);
-		$result = $db->sql_query($sql);
-		$dataset = $db->sql_fetchrowset($result);
-		$achievcount = count($dataset);
+		// Fetch paginated results — flat join, no criteria/rewards (shown in detail view)
+		$sql = 'SELECT a.id AS achievement_id, a.game_id, a.title, a.points,
+				a.description, a.icon, a.factionid, a.reward,
+				ac.achievements_completed, ac.guild_id, ac.player_id
+			FROM ' . $this->bb_achievement_track_table . ' ac
+			INNER JOIN ' . $this->bb_achievement_table . ' a ON a.id = ac.achievement_id
+			WHERE (ac.guild_id = ' . (int) $guild_id . ' OR ac.player_id = ' . (int) $player_id . ')
+				AND a.game_id = \'' . $db->sql_escape($this->game_id) . '\'
+			ORDER BY ' . $current_order['sql'];
+		$result = $db->sql_query_limit($sql, $per_page, $start);
 
-		if ($start> 0)
+		$achievements = array();
+		while ($row = $db->sql_fetchrow($result))
 		{
-			$result = $db->sql_query_limit($sql, 15, $start);
-			$dataset = $db->sql_fetchrowset($result);
+			$achievements[] = array(
+				'guild_id'               => $row['guild_id'],
+				'player_id'              => $row['player_id'],
+				'game_id'                => $row['game_id'],
+				'title'                  => $row['title'],
+				'points'                 => $row['points'],
+				'description'            => $row['description'],
+				'icon'                   => $row['icon'],
+				'factionId'              => $row['factionid'],
+				'reward'                 => $row['reward'],
+				'achievements_completed' => $row['achievements_completed'],
+			);
 		}
 		$db->sql_freeresult($result);
 
-		$achievements = array();
-
-		foreach ($dataset as $row)
-		{
-			$achievements[] = array(
-				'guild_id'                 => $guild_id,
-				'player_id'                => $player_id,
-				'game_id'                  => $this->game_id,
-				'title'                    => $row['title'],
-				'points'                   => $row['points'],
-				'description'              => $row['description'],
-				'icon'                     => $row['icon'],
-				'factionId'                => $row['factionid'],
-				'reward'                   => $row['reward'],
-				'criteria'                 => array(
-					'criteria_id' => $row['criteria_id'],
-					'criteriadescription' =>	$row['criteriadescription'],
-					'criteriaorder' =>	$row['criteriaorder'],
-					'criteriamax' =>	$row['criteriamax'],
-					'criteria_quantity' =>	$row['criteria_quantity'],
-					'criteria_timestamp' =>	$row['criteria_timestamp'],
-					'criteria_created' =>	$row['criteria_created']),
-				'rewardItems'  => array(
-					'rewards_item_id' =>	$row['rewards_item_id'],
-					'rewardsdescription' =>	$row['rewardsdescription'],
-					'itemlevel' =>	$row['itemlevel'],
-					'quality'   => $row['quality']
-				),
-				'achievements_completed'   => $row['achievements_completed']
-			);
-		}
-
 		return array($achievements, $current_order, $achievcount);
-
 	}
 
 
 	/**
-	 * call API and set set achievment tracked for one guild
+	 * Sync guild achievements from the Battle.net Game Data API.
+	 *
+	 * Uses the new Game Data API endpoints:
+	 * - Guild achievements: GET /data/wow/guild/{realm}/{name}/achievements (profile namespace)
+	 * - Achievement detail: GET /data/wow/achievement/{id} (static namespace)
 	 *
 	 * @param \avathar\bbguild\model\player\guilds $Guild
 	 * @param \avathar\bbguild\model\games\game    $game
+	 * @return array Result with 'success' (bool), 'message' (string), 'count' (int)
 	 */
-	public function setAchievements(guilds $Guild, game $game)
+	public function setAchievements(guilds $Guild, game $game): array
 	{
-		global $db;
+		$db = $this->db;
+		$cache = $this->cache;
 
-		$achievement = array();
-
-		/**** achievement track *****/
-		$sql = 'DELETE FROM ' . $this->bb_achievement_track_table . ' WHERE guild_id = ' . $Guild->guildid;
-		$db->sql_query($sql);
-		/**** criteria track *****/
-		$sql = 'DELETE FROM ' . $this->bb_criteria_track_table . ' WHERE guild_id = ' . $Guild->guildid;
-		$db->sql_query($sql);
-		/**** achievement  *****/
-		$sql = 'DELETE FROM ' . $this->bb_achievement_table . ' WHERE 1 <> 1 ';
-		$db->sql_query($sql);
-		/**** achievement rewards *****/
-		$sql = 'DELETE FROM ' . $this->bb_achievement_rewards_table . ' WHERE 1 = 1 ';
-		$db->sql_query($sql);
-		/**** achievement criteria *****/
-		$sql = 'DELETE FROM ' . $this->bb_achievement_criteria_table . ' WHERE  1 = 1 ';
-		$db->sql_query($sql);
-		/**** relations *****/
-		$sql = 'DELETE FROM ' . $this->bb_relations_table . ' WHERE 1 = 1' ;
-		$db->sql_query($sql);
-
-		//call Guild API for achievements endpoint
-		$data = (array) $Guild->Call_Guild_API(array('achievements'), $game);
-
-		foreach ($data['achievements']['achievementsCompleted'] as $id => $achi)
+		if (!$game->getArmoryEnabled())
 		{
-			$achievement[$id]['id'] = $achi;
-		}
-		foreach ($data['achievements']['achievementsCompletedTimestamp'] as $id => $achiTimeStamp)
-		{
-			$achievement[$id]['timestamp'] = $achiTimeStamp;
+			return array('success' => false, 'message' => 'Armory is not enabled for this game. Enable it in ACP Game settings.', 'count' => 0);
 		}
 
-		$sql_ary = array();
-
-		foreach ($achievement as $id => $achi)
+		if (!$Guild->isArmoryEnabled())
 		{
-			$sql_ary[] = array(
-				'guild_id' => $Guild->guildid,
-				'player_id' => 0,
-				'achievement_id' => $achi['id'],
-				'achievements_completed' => $achi['timestamp'],
+			return array('success' => false, 'message' => 'Armory is not enabled for this guild. Enable it in ACP Guild settings.', 'count' => 0);
+		}
+
+		// Use the guild's own region (guilds can be on different regions within the same game)
+		$region = $Guild->getRegion();
+		if (empty($region))
+		{
+			// Fall back to game-level region if guild has none set
+			$region = $game->getRegion();
+		}
+		$apikey = $game->getApikey();
+		$privkey = $game->get_privkey();
+
+		if (empty($apikey) || empty($privkey))
+		{
+			return array('success' => false, 'message' => 'Battle.net API credentials not configured. Set Client ID and Secret in ACP Game settings.', 'count' => 0);
+		}
+
+		$realm_slug = $this->make_slug($Guild->getRealm());
+		$name_slug = $this->make_slug($Guild->getName());
+
+		if (empty($realm_slug) || empty($name_slug))
+		{
+			return array('success' => false, 'message' => sprintf('Guild realm or name is empty (realm="%s", name="%s"). Check guild settings.', $Guild->getRealm(), $Guild->getName()), 'count' => 0);
+		}
+
+		$locale = $game->get_apilocale();
+
+		// First verify the guild exists by fetching the basic guild profile
+		$api = new battlenet('guild', $region, $apikey, $locale, $privkey, '', $cache);
+
+		$guild_response = $api->guild->getGuild($realm_slug, $name_slug);
+		$guild_data = isset($guild_response['response']) ? $guild_response['response'] : array();
+
+		if (empty($guild_data) || !is_array($guild_data) || isset($guild_data['code']))
+		{
+			$http_code = isset($guild_response['response_headers']['http_code']) ? $guild_response['response_headers']['http_code'] : 'unknown';
+			$request_url = isset($guild_response['request_url']) ? $guild_response['request_url'] : 'unknown';
+			$error_detail = '';
+			if (isset($guild_data['code']))
+			{
+				$error_detail = sprintf('API error %d: %s', $guild_data['code'], isset($guild_data['detail']) ? $guild_data['detail'] : 'Unknown');
+			}
+			else
+			{
+				$error_detail = sprintf('Empty response (HTTP %s)', $http_code);
+			}
+			unset($api);
+			return array('success' => false, 'message' => sprintf(
+				'%s. Could not find guild "%s" on realm "%s" (region: %s). Request URL: %s',
+				$error_detail, $Guild->getName(), $Guild->getRealm(), $region, $request_url
+			), 'count' => 0);
+		}
+
+		// Now fetch guild achievements
+		$response = $api->guild->getAchievements($realm_slug, $name_slug);
+		unset($api);
+
+		$data = isset($response['response']) ? $response['response'] : array();
+
+		// Check for API error responses (code + detail format)
+		$achiev_url = isset($response['request_url']) ? $response['request_url'] : 'unknown';
+		if (empty($data) || !is_array($data))
+		{
+			$http_code = isset($response['response_headers']['http_code']) ? $response['response_headers']['http_code'] : 'unknown';
+			$error = isset($response['error']) ? $response['error'] : '';
+			return array('success' => false, 'message' => sprintf('Achievements API returned empty response (HTTP %s). %s URL: %s', $http_code, $error, $achiev_url), 'count' => 0);
+		}
+
+		if (isset($data['code']))
+		{
+			$detail = isset($data['detail']) ? $data['detail'] : 'Unknown error';
+			return array('success' => false, 'message' => sprintf('Achievements API error %d: %s. URL: %s', $data['code'], $detail, $achiev_url), 'count' => 0);
+		}
+
+		// Clear existing tracking data for this guild
+		$db->sql_query('DELETE FROM ' . $this->bb_achievement_track_table . ' WHERE guild_id = ' . (int) $Guild->guildid);
+		$db->sql_query('DELETE FROM ' . $this->bb_criteria_track_table . ' WHERE guild_id = ' . (int) $Guild->guildid);
+
+		// Parse the new API response format
+		// Response contains: achievements[] with { id, achievement { id, name, ... }, completed_timestamp, criteria { ... } }
+		$achievements = isset($data['achievements']) ? $data['achievements'] : array();
+
+		if (empty($achievements))
+		{
+			return array('success' => false, 'message' => sprintf('API response has no achievements array. Response keys: %s', implode(', ', array_keys($data))), 'count' => 0);
+		}
+
+		$track_rows = array();
+
+		foreach ($achievements as $entry)
+		{
+			$achievement_id = isset($entry['achievement']['id']) ? (int) $entry['achievement']['id'] : 0;
+			if ($achievement_id === 0)
+			{
+				continue;
+			}
+
+			$completed_ts = isset($entry['completed_timestamp']) ? (int) $entry['completed_timestamp'] : 0;
+
+			$track_rows[] = array(
+				'guild_id'               => (int) $Guild->guildid,
+				'player_id'              => 0,
+				'achievement_id'         => $achievement_id,
+				'achievements_completed' => $completed_ts,
 			);
 		}
-		$db->sql_multi_insert($this->bb_achievement_track_table, $sql_ary);
 
-		$criteria = array();
-		foreach ($data['achievements']['criteria'] as $id => $criteria_id)
+		if (!empty($track_rows))
 		{
-			$criteria[$id]['criteria_id'] = $criteria_id;
-			$criteria[$id]['criteriaQuantity'] = $data['achievements']['criteriaQuantity'][$id];
-			$criteria[$id]['criteriaTimestamp'] = $data['achievements']['criteriaTimestamp'][$id];
-			$criteria[$id]['criteriaCreated'] = $data['achievements']['criteriaCreated'][$id];
+			$db->sql_multi_insert($this->bb_achievement_track_table, $track_rows);
 		}
 
-		$sql_ary = array();
-		foreach ($criteria as $id => $crit)
+		// Update guild achievement points from the API total
+		if (isset($data['total_points']))
 		{
-			$sql_ary[] = array(
-				'guild_id' => $Guild->guildid,
-				'player_id' => 0,
-				'criteria_id' => $crit['criteria_id'],
-				'criteria_quantity' => $crit['criteriaQuantity'],
-				'criteria_timestamp' => $crit['criteriaTimestamp'],
-				'criteria_created' => $crit['criteriaCreated'],
-			);
+			$db->sql_query('UPDATE ' . $this->bb_guild_wow_table . ' SET achievementpoints = ' . (int) $data['total_points'] .
+				' WHERE guild_id = ' . (int) $Guild->guildid);
 		}
-		/**** loop tracked achievements that arent already in achievement table *****/
-		$sql_array = array (
-			'SELECT' => ' t.achievement_id ',
-			'FROM' => array (
-				$this->bb_achievement_track_table => 't',
-			),
-			'LEFT_JOIN' => array(
-				array(
-					'FROM'  => array($this->bb_achievement_table => 's'),
-					'ON'    => ' s.id = t.achievement_id ',
-				)),
-			'WHERE' =>  ' t.guild_id = ' . $Guild->guildid . ' AND s.id is NULL ',
-		);
-		$sql = $db->sql_build_query('SELECT', $sql_array);
+
+		$track_count = count($track_rows);
+
+		// Insert basic achievement stubs from the guild response for any
+		// achievements not yet in the detail table. This ensures the portal
+		// module can display them immediately (title + date).
+		$existing_ids = array();
+		$sql = 'SELECT id FROM ' . $this->bb_achievement_table . " WHERE game_id = '" . $db->sql_escape($this->game->game_id) . "'";
 		$result = $db->sql_query($sql);
-
-		$achievement_ids = array();
 		while ($row = $db->sql_fetchrow($result))
 		{
-			$achievement_ids[] = $row['achievement_id'];
+			$existing_ids[(int) $row['id']] = true;
 		}
 		$db->sql_freeresult($result);
 
-		foreach ($achievement_ids as $id => $achievement_id)
+		$stub_rows = array();
+		foreach ($achievements as $entry)
 		{
-			$this->id = $achievement_id;
-			$achievementdata = $this->Call_Achievement_API($Guild);
-			if ($achievementdata)
+			$aid = isset($entry['achievement']['id']) ? (int) $entry['achievement']['id'] : 0;
+			if ($aid > 0 && !isset($existing_ids[$aid]))
 			{
-				$this->insert_achievement($achievementdata);
-				$this->insert_rewardItems($achievementdata);
-				$this->insert_criteria($achievementdata);
+				$stub_rows[] = array(
+					'id'          => $aid,
+					'game_id'     => $this->game->game_id,
+					'title'       => isset($entry['achievement']['name']) ? $entry['achievement']['name'] : '',
+					'points'      => 0,
+					'description' => '',
+					'icon'        => '',
+					'factionid'   => 2,
+					'reward'      => '',
+				);
+				$existing_ids[$aid] = true;
+			}
+		}
+
+		if (!empty($stub_rows))
+		{
+			$db->sql_multi_insert($this->bb_achievement_table, $stub_rows);
+		}
+
+		// Now fetch full details for achievements missing icon/points/description.
+		// Limit to a batch to avoid PHP timeout; user can re-run to fetch more.
+		$max_detail_fetch = 50;
+
+		$sql = 'SELECT id FROM ' . $this->bb_achievement_table .
+			" WHERE game_id = '" . $db->sql_escape($this->game->game_id) . "'" .
+			" AND icon = '' AND points = 0" .
+			' ORDER BY id';
+		$result = $db->sql_query_limit($sql, $max_detail_fetch);
+
+		$incomplete_ids = array();
+		while ($row = $db->sql_fetchrow($result))
+		{
+			$incomplete_ids[] = (int) $row['id'];
+		}
+		$db->sql_freeresult($result);
+
+		$detail_count = 0;
+		foreach ($incomplete_ids as $achievement_id)
+		{
+			$detail = $this->fetch_achievement_detail($achievement_id, $game);
+			if ($detail !== false)
+			{
+				$this->update_achievement_detail($detail);
+				$this->insert_criteria($detail);
+				$detail_count++;
+			}
+		}
+
+		// Count how many still need details
+		$sql = 'SELECT COUNT(*) AS cnt FROM ' . $this->bb_achievement_table .
+			" WHERE game_id = '" . $db->sql_escape($this->game->game_id) . "'" .
+			" AND icon = '' AND points = 0";
+		$result = $db->sql_query($sql);
+		$remaining = (int) $db->sql_fetchfield('cnt');
+		$db->sql_freeresult($result);
+
+		$message = sprintf('Synced %d achievements, fetched details for %d.', $track_count, $detail_count);
+		if ($remaining > 0)
+		{
+			$message .= sprintf(' %d achievements still need details — click "Load from API" again to fetch more.', $remaining);
+		}
+
+		return array(
+			'success' => true,
+			'message' => $message,
+			'count'   => $track_count,
+		);
+	}
+
+	/**
+	 * Recursively collect criteria progress from the new API response.
+	 *
+	 * The new API nests criteria: each entry may have child_criteria[].
+	 *
+	 * @param array $criteria_data  Criteria node from API response
+	 * @param int   $guild_id
+	 * @param array &$rows          Accumulator for DB insert rows
+	 */
+	private function collect_criteria(array $criteria_data, int $guild_id, array &$rows): void
+	{
+		$criteria_id = isset($criteria_data['id']) ? (int) $criteria_data['id'] : 0;
+		if ($criteria_id > 0)
+		{
+			$rows[] = array(
+				'guild_id'           => (int) $guild_id,
+				'player_id'          => 0,
+				'criteria_id'        => $criteria_id,
+				'criteria_quantity'   => isset($criteria_data['amount']) ? (int) $criteria_data['amount'] : 0,
+				'criteria_timestamp' => isset($criteria_data['completed_timestamp']) ? (int) $criteria_data['completed_timestamp'] : 0,
+				'criteria_created'   => isset($criteria_data['created_timestamp']) ? (int) $criteria_data['created_timestamp'] : 0,
+			);
+		}
+
+		// Recurse into child criteria
+		if (isset($criteria_data['child_criteria']) && is_array($criteria_data['child_criteria']))
+		{
+			foreach ($criteria_data['child_criteria'] as $child)
+			{
+				$this->collect_criteria($child, $guild_id, $rows);
 			}
 		}
 	}
 
 	/**
-	 * call achievement endpoint
+	 * Fetch achievement detail from the static Game Data API.
 	 *
-	 * @param \avathar\bbguild\model\player\guilds $Guild
-	 * @return array|bool
+	 * @param int    $achievement_id
+	 * @param game   $game
+	 * @return array|false
 	 */
-	private function Call_Achievement_API(guilds $Guild)
+	private function fetch_achievement_detail(int $achievement_id, game $game)
 	{
-		global $cache;
+		$cache = $this->cache;
 
-		// game and guild have to be armory enabled...
-		if (! $this->game->getArmoryEnabled() || !$Guild->isArmoryEnabled() )
-		{
-			return false;
-		}
-
-		// new instance of battlenet class
-		$api  = new battlenet('achievement',$this->game->getRegion(), $this->game->getApikey(),
-			$this->game->get_apilocale(), $this->game->get_privkey(), $this->ext_path, $cache);
-		$data = $api->achievement->getAchievementDetail($this->id);
-		$data = $data['response'];
+		$api = new battlenet('achievement', $game->getRegion(), $game->getApikey(),
+			$game->get_apilocale(), $game->get_privkey(), '', $cache);
+		$response = $api->achievement->getAchievementDetail($achievement_id);
 		unset($api);
-		if (!isset($data))
-		{
-			return false;
-		}
 
-		//if we get error code
-		if (isset($data['code']))
-		{
-			return false;
-		}
-
-		if (isset($data['status']))
+		$data = isset($response['response']) ? $response['response'] : null;
+		if (!isset($data) || !is_array($data) || isset($data['code']))
 		{
 			return false;
 		}
@@ -744,120 +846,248 @@ class achievement
 	}
 
 	/**
-	 * Insert an achievement into local database
+	 * Insert an achievement into the local database.
 	 *
-	 * @param array $data
+	 * Maps the new Game Data API fields:
+	 * - name (was: title)
+	 * - description
+	 * - points
+	 * - reward_description (was: reward)
+	 * - media.assets[0].value (icon URL, was: icon name)
+	 * - requirements.faction.type (was: factionId)
+	 *
+	 * @param array $data Achievement detail from Game Data API
 	 */
-	private function insert_achievement(array $data)
+	private function insert_achievement(array $data): void
 	{
-		global $db;
-		$this->id = isset($data['id']) ? $data['id'] : 0;
+		$db = $this->db;
+
+		$this->id = isset($data['id']) ? (int) $data['id'] : 0;
+		if ($this->id === 0)
+		{
+			return;
+		}
+
 		$this->game_id = $this->game->game_id;
-		$this->title = isset($data['title']) ? $data['title']: '';
-		$this->points = isset($data['points']) ? $data['points']: 0;
-		$this->description = isset($data['description']) ? $data['description']: '';
-		$this->icon = isset($data['icon']) ? $data['icon']: '';
-		$this->factionId = isset($data['factionId']) ? $data['factionId']: '';
-		$this->reward = isset($data['reward']) ? $data['reward']: '';
+		$this->title = isset($data['name']) ? $data['name'] : '';
+		$this->points = isset($data['points']) ? (int) $data['points'] : 0;
+		$this->description = isset($data['description']) ? $data['description'] : '';
+		$this->reward = isset($data['reward_description']) ? $data['reward_description'] : '';
+
+		// Icon: new API provides media.assets[] with key/value pairs.
+		// The value is a full URL like https://render.worldofwarcraft.com/icons/56/achievement_boss.jpg
+		// We store just the icon name (without path and extension) for flexible template rendering.
+		$this->icon = '';
+		if (isset($data['media']['assets']) && is_array($data['media']['assets']))
+		{
+			foreach ($data['media']['assets'] as $asset)
+			{
+				if (isset($asset['key']) && $asset['key'] === 'icon' && isset($asset['value']))
+				{
+					$icon_value = $asset['value'];
+					// Extract icon name from URL: get filename without extension
+					$basename = basename($icon_value);
+					$this->icon = pathinfo($basename, PATHINFO_FILENAME);
+					break;
+				}
+			}
+		}
+
+		// Faction: new API uses requirements.faction.type (ALLIANCE, HORDE, or absent for both)
+		$this->factionId = 2; // default: both factions
+		if (isset($data['requirements']['faction']['type']))
+		{
+			$faction_type = strtoupper($data['requirements']['faction']['type']);
+			if ($faction_type === 'ALLIANCE')
+			{
+				$this->factionId = 0;
+			}
+			elseif ($faction_type === 'HORDE')
+			{
+				$this->factionId = 1;
+			}
+		}
 
 		$sql_ary = array(
-			'id'            => $this->id,
-			'game_id'       => $this->game_id,
-			'title'         => $this->title,
-			'points'        => $this->points,
-			'description'   => $this->description,
-			'factionid'     => $this->factionId,
-			'icon'          => $this->icon,
-			'reward'        => $this->reward
+			'id'          => $this->id,
+			'game_id'     => $this->game_id,
+			'title'       => $this->title,
+			'points'      => $this->points,
+			'description' => $this->description,
+			'factionid'   => $this->factionId,
+			'icon'        => $this->icon,
+			'reward'      => $this->reward,
 		);
 
 		$db->sql_query('INSERT INTO ' . $this->bb_achievement_table . ' ' . $db->sql_build_array('INSERT', $sql_ary));
 	}
 
 	/**
-	 * insert achievement rewardItems array into database
+	 * Update an existing achievement stub with full detail from the API.
 	 *
-	 * @param array $data
+	 * @param array $data Achievement detail from Game Data API
 	 */
-	private function insert_rewardItems(array $data)
+	private function update_achievement_detail(array $data): void
 	{
-		$sql_ary1 = array();
-		$sql_ary2 = array();
-		global $db;
-		$this->rewardItems = is_array($data['rewardItems']) ? $data['rewardItems'] : '' ;
-		foreach ($this->rewardItems as $id => $rewardItems)
+		$db = $this->db;
+
+		$id = isset($data['id']) ? (int) $data['id'] : 0;
+		if ($id === 0)
 		{
-			$sql_ary1[] = array(
-				'rewards_item_id'   => $rewardItems['id'],
-				'description'       => $rewardItems['name'],
-				'itemlevel'         => $rewardItems['itemLevel'],
-				'icon'              => $rewardItems['icon'],
-				'quality'           => $rewardItems['quality'],
-			);
-			$db->sql_query('DELETE FROM ' . $this->bb_achievement_rewards_table . ' WHERE rewards_item_id =  ' . $rewardItems['id']);
-
-			$sql_ary2[] = array(
-				'attribute_id'  => 'ACH',
-				'rel_attr_id'   => 'REW',
-				'att_value'     => $data['id'],
-				'rel_value'     => $rewardItems['id'],
-			);
-
-			$db->sql_query('DELETE FROM ' . $this->bb_relations_table . " WHERE attribute_id =  'ACH' and rel_attr_id = 'REW' and att_value= '" . $data['id'] . "' and rel_value = '".  $rewardItems['id'] ."' " );
+			return;
 		}
 
-		if (count($sql_ary1) > 0)
+		$title = isset($data['name']) ? $data['name'] : '';
+		$points = isset($data['points']) ? (int) $data['points'] : 0;
+		$description = isset($data['description']) ? $data['description'] : '';
+		$reward = isset($data['reward_description']) ? $data['reward_description'] : '';
+
+		$icon = '';
+		if (isset($data['media']['assets']) && is_array($data['media']['assets']))
 		{
-			$db->sql_multi_insert($this->bb_achievement_rewards_table, $sql_ary1);
+			foreach ($data['media']['assets'] as $asset)
+			{
+				if (isset($asset['key']) && $asset['key'] === 'icon' && isset($asset['value']))
+				{
+					$icon = pathinfo(basename($asset['value']), PATHINFO_FILENAME);
+					break;
+				}
+			}
 		}
 
-		if (count($sql_ary2) > 0)
+		$factionId = 2;
+		if (isset($data['requirements']['faction']['type']))
 		{
-			$db->sql_multi_insert($this->bb_relations_table, $sql_ary2);
+			$faction_type = strtoupper($data['requirements']['faction']['type']);
+			if ($faction_type === 'ALLIANCE')
+			{
+				$factionId = 0;
+			}
+			elseif ($faction_type === 'HORDE')
+			{
+				$factionId = 1;
+			}
 		}
 
+		$sql_ary = array(
+			'title'       => $title,
+			'points'      => $points,
+			'description' => $description,
+			'factionid'   => $factionId,
+			'icon'        => $icon,
+			'reward'      => $reward,
+		);
+
+		$db->sql_query('UPDATE ' . $this->bb_achievement_table .
+			' SET ' . $db->sql_build_array('UPDATE', $sql_ary) .
+			' WHERE id = ' . $id);
 	}
 
 	/**
-	 * insert achievement criteria array into database
+	 * Insert achievement criteria from the detail API into the database.
 	 *
-	 * @param array $data
+	 * The new API nests criteria under criteria.child_criteria[].
+	 *
+	 * @param array $data Achievement detail from Game Data API
 	 */
-	private function insert_criteria(array $data)
+	private function insert_criteria(array $data): void
 	{
-		global $db;
-		$sql_ary3 = array();
-		$sql_ary4 = array();
-		$this->criteria = is_array($data['criteria']) ? $data['criteria'] : '' ;
-		foreach ($this->criteria as $id => $criterium)
+		$db = $this->db;
+
+		if (!isset($data['criteria']) || !is_array($data['criteria']))
 		{
-			$sql_ary3[] = array(
-				'criteria_id'   => $criterium['id'],
-				'description'   => $criterium['description'],
-				'orderindex'    => $criterium['orderIndex'],
-				'max'           => $criterium['max'],
+			return;
+		}
+
+		$criteria_rows = array();
+		$relation_rows = array();
+		$this->flatten_criteria($data['criteria'], (int) $data['id'], $criteria_rows, $relation_rows, 0);
+
+		if (!empty($criteria_rows))
+		{
+			$db->sql_multi_insert($this->bb_achievement_criteria_table, $criteria_rows);
+		}
+
+		if (!empty($relation_rows))
+		{
+			$db->sql_multi_insert($this->bb_relations_table, $relation_rows);
+		}
+	}
+
+	/**
+	 * Recursively flatten criteria tree for DB storage.
+	 *
+	 * @param array $node            Criteria node
+	 * @param int   $achievement_id  Parent achievement ID
+	 * @param array &$criteria_rows  Accumulator for criteria table
+	 * @param array &$relation_rows  Accumulator for relations table
+	 * @param int   $order           Order index counter
+	 */
+	private function flatten_criteria(array $node, int $achievement_id, array &$criteria_rows, array &$relation_rows, int $order): void
+	{
+		$db = $this->db;
+
+		$criteria_id = isset($node['id']) ? (int) $node['id'] : 0;
+		if ($criteria_id > 0)
+		{
+			$db->sql_query('DELETE FROM ' . $this->bb_achievement_criteria_table . ' WHERE criteria_id = ' . $criteria_id);
+
+			$criteria_rows[] = array(
+				'criteria_id' => $criteria_id,
+				'description' => isset($node['description']) ? $node['description'] : '',
+				'orderindex'  => $order,
+				'max'         => isset($node['amount']) ? (int) $node['amount'] : 0,
 			);
 
-			$db->sql_query('DELETE FROM ' . $this->bb_achievement_criteria_table . ' WHERE criteria_id =  ' . $criterium['id']);
+			$db->sql_query('DELETE FROM ' . $this->bb_relations_table .
+				" WHERE attribute_id = 'ACH' AND rel_attr_id = 'CRI'" .
+				" AND att_value = '" . $achievement_id . "'" .
+				" AND rel_value = '" . $criteria_id . "'");
 
-			$sql_ary4[] = array(
-				'attribute_id'  => 'ACH',
-				'rel_attr_id'   => 'CRI',
-				'att_value'     => $data['id'],
-				'rel_value'     => $criterium['id'],
+			$relation_rows[] = array(
+				'attribute_id' => 'ACH',
+				'rel_attr_id'  => 'CRI',
+				'att_value'    => $achievement_id,
+				'rel_value'    => $criteria_id,
 			);
-
-			$db->sql_query('DELETE FROM ' . $this->bb_relations_table . " WHERE attribute_id =  'ACH' and rel_attr_id = 'CRI' and att_value= '" . $data['id'] . "' and rel_value = '".  $criterium['id'] ."' " );
 		}
 
-		if (count($sql_ary3) > 0)
+		if (isset($node['child_criteria']) && is_array($node['child_criteria']))
 		{
-			$db->sql_multi_insert($this->bb_achievement_criteria_table, $sql_ary3);
+			foreach ($node['child_criteria'] as $idx => $child)
+			{
+				$this->flatten_criteria($child, $achievement_id, $criteria_rows, $relation_rows, $idx);
+			}
 		}
+	}
 
-		if (count($sql_ary4) > 0)
+	/**
+	 * Create a URL-safe slug from a name.
+	 *
+	 * Battle.net slugs are lowercase, spaces become hyphens, accented characters
+	 * are transliterated, and apostrophes/special characters are removed.
+	 *
+	 * @param string $name
+	 * @return string
+	 */
+	private function make_slug(string $name): string
+	{
+		$slug = trim($name);
+		// Transliterate accented characters (é→e, ü→u, etc.)
+		if (function_exists('transliterator_transliterate'))
 		{
-			$db->sql_multi_insert($this->bb_relations_table, $sql_ary4);
+			$slug = transliterator_transliterate('Any-Latin; Latin-ASCII; Lower()', $slug);
 		}
+		else
+		{
+			$slug = strtolower($slug);
+		}
+		// Replace spaces with hyphens
+		$slug = str_replace(' ', '-', $slug);
+		// Remove anything that's not alphanumeric or hyphen
+		$slug = preg_replace('/[^a-z0-9\-]/', '', $slug);
+		// Collapse multiple hyphens
+		$slug = preg_replace('/-+/', '-', $slug);
+		return trim($slug, '-');
 	}
 }
