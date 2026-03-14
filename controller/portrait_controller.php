@@ -13,6 +13,7 @@
 namespace avathar\bbguild_wow\controller;
 
 use avathar\bbguild_wow\game\wow_api;
+use avathar\bbguild\model\admin\log;
 use phpbb\db\driver\driver_interface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
@@ -23,6 +24,9 @@ class portrait_controller
 
 	/** @var driver_interface */
 	protected $db;
+
+	/** @var log */
+	protected $bbguildlog;
 
 	/** @var string */
 	protected $players_table;
@@ -36,6 +40,7 @@ class portrait_controller
 	public function __construct(
 		wow_api $wow_api,
 		driver_interface $db,
+		log $bbguildlog,
 		string $players_table,
 		string $guild_table,
 		string $games_table
@@ -43,6 +48,7 @@ class portrait_controller
 	{
 		$this->wow_api = $wow_api;
 		$this->db = $db;
+		$this->bbguildlog = $bbguildlog;
 		$this->players_table = $players_table;
 		$this->guild_table = $guild_table;
 		$this->games_table = $games_table;
@@ -67,6 +73,11 @@ class portrait_controller
 
 		if (!$guild_row || $guild_row['game_id'] !== 'wow')
 		{
+			$this->bbguildlog->log_insert(array(
+				'log_type'   => 'L_ERROR_ROSTER_SYNCED',
+				'log_result' => 'L_ERROR',
+				'log_action' => ['(unknown)', 'Guild not found or not a WoW guild'],
+			));
 			return new JsonResponse(array('success' => false, 'message' => 'Guild not found or not a WoW guild.'));
 		}
 
@@ -79,6 +90,11 @@ class portrait_controller
 
 		if (!$game_row || empty($game_row['apikey']))
 		{
+			$this->bbguildlog->log_insert(array(
+				'log_type'   => 'L_ERROR_ROSTER_SYNCED',
+				'log_result' => 'L_ERROR',
+				'log_action' => [$guild_row['name'], 'API credentials not configured'],
+			));
 			return new JsonResponse(array('success' => false, 'message' => 'API credentials not configured.'));
 		}
 
@@ -95,6 +111,11 @@ class portrait_controller
 		if (!is_array($data) || isset($data['code']))
 		{
 			$detail = isset($data['code']) ? sprintf('API error %d', $data['code']) : 'Empty response';
+			$this->bbguildlog->log_insert(array(
+				'log_type'   => 'L_ERROR_ARMORY_DOWN',
+				'log_result' => 'L_ERROR',
+				'log_action' => [$guild_row['name'] . '-' . $guild_row['realm'] . ': ' . $detail],
+			));
 			return new JsonResponse(array('success' => false, 'message' => $detail));
 		}
 
@@ -128,6 +149,11 @@ class portrait_controller
 			$member_count = count($data['members']);
 		}
 
+		$this->bbguildlog->log_insert(array(
+			'log_type'   => 'L_ACTION_ROSTER_SYNCED',
+			'log_action' => [$guild_row['name'], sprintf('%d members', $member_count)],
+		));
+
 		return new JsonResponse(array(
 			'success'      => true,
 			'message'      => sprintf('Roster synced: %d members.', $member_count),
@@ -153,14 +179,20 @@ class portrait_controller
 
 		if (!$game_row || empty($game_row['apikey']))
 		{
+			$this->bbguildlog->log_insert(array(
+				'log_type'   => 'L_ERROR_SPECS_SYNCED',
+				'log_result' => 'L_ERROR',
+				'log_action' => ['(unknown)', 'API credentials not configured'],
+			));
 			return new JsonResponse(array('error' => 'API credentials not configured', 'done' => true), 400);
 		}
 
-		$sql = 'SELECT region FROM ' . $this->guild_table . ' WHERE id = ' . $guild_id;
+		$sql = 'SELECT name, region FROM ' . $this->guild_table . ' WHERE id = ' . $guild_id;
 		$result = $this->db->sql_query($sql);
 		$guild_row = $this->db->sql_fetchrow($result);
 		$this->db->sql_freeresult($result);
 
+		$guild_name = $guild_row ? $guild_row['name'] : '(unknown)';
 		$region = (!empty($guild_row['region'])) ? $guild_row['region'] : $game_row['region'];
 
 		// Count total and remaining
@@ -200,8 +232,25 @@ class portrait_controller
 		$remaining_after = (int) $this->db->sql_fetchfield('remaining');
 		$this->db->sql_freeresult($result);
 
+		$has_server_errors = $this->has_server_errors($sync_result);
+
+		$this->bbguildlog->log_insert(array(
+			'log_type'   => ($sync_result['count'] > 0 && !$has_server_errors) ? 'L_ACTION_SPECS_SYNCED' : 'L_ERROR_SPECS_SYNCED',
+			'log_result' => ($sync_result['count'] > 0 && !$has_server_errors) ? 'L_SUCCESS' : 'L_ERROR',
+			'log_action' => [$guild_name, $sync_result['message']],
+		));
+
+		if ($has_server_errors)
+		{
+			$this->bbguildlog->log_insert(array(
+				'log_type'   => 'L_ERROR_ARMORY_DOWN',
+				'log_result' => 'L_ERROR',
+				'log_action' => [$guild_name . ': specs sync interrupted by server error'],
+			));
+		}
+
 		return new JsonResponse(array(
-			'done'      => $remaining_after === 0,
+			'done'      => $remaining_after === 0 || $has_server_errors,
 			'fetched'   => $sync_result['count'],
 			'total'     => $total,
 			'remaining' => $remaining_after,
@@ -228,19 +277,25 @@ class portrait_controller
 
 		if (!$game_row || empty($game_row['apikey']))
 		{
+			$this->bbguildlog->log_insert(array(
+				'log_type'   => 'L_ERROR_PORTRAITS_SYNCED',
+				'log_result' => 'L_ERROR',
+				'log_action' => ['(unknown)', 'API credentials not configured'],
+			));
 			return new JsonResponse(array(
 				'error' => 'API credentials not configured',
 				'done' => true,
 			), 400);
 		}
 
-		// Get guild region (fall back to game region)
-		$sql = 'SELECT region FROM ' . $this->guild_table .
+		// Get guild name and region (fall back to game region)
+		$sql = 'SELECT name, region FROM ' . $this->guild_table .
 			' WHERE id = ' . $guild_id;
 		$result = $this->db->sql_query($sql);
 		$guild_row = $this->db->sql_fetchrow($result);
 		$this->db->sql_freeresult($result);
 
+		$guild_name = $guild_row ? $guild_row['name'] : '(unknown)';
 		$region = (!empty($guild_row['region'])) ? $guild_row['region'] : $game_row['region'];
 
 		// Count total and remaining
@@ -289,12 +344,51 @@ class portrait_controller
 		$remaining_after = (int) $this->db->sql_fetchfield('remaining');
 		$this->db->sql_freeresult($result);
 
+		$has_server_errors = $this->has_server_errors($sync_result);
+
+		$this->bbguildlog->log_insert(array(
+			'log_type'   => ($sync_result['count'] > 0 && !$has_server_errors) ? 'L_ACTION_PORTRAITS_SYNCED' : 'L_ERROR_PORTRAITS_SYNCED',
+			'log_result' => ($sync_result['count'] > 0 && !$has_server_errors) ? 'L_SUCCESS' : 'L_ERROR',
+			'log_action' => [$guild_name, $sync_result['message']],
+		));
+
+		if ($has_server_errors)
+		{
+			$this->bbguildlog->log_insert(array(
+				'log_type'   => 'L_ERROR_ARMORY_DOWN',
+				'log_result' => 'L_ERROR',
+				'log_action' => [$guild_name . ': portrait sync interrupted by server error'],
+			));
+		}
+
 		return new JsonResponse(array(
-			'done'      => $remaining_after === 0,
+			'done'      => $remaining_after === 0 || $has_server_errors,
 			'fetched'   => $sync_result['count'],
 			'total'     => $total,
 			'remaining' => $remaining_after,
 			'message'   => $sync_result['message'],
 		));
+	}
+
+	/**
+	 * Check if a sync result contains server-side (5xx) errors.
+	 *
+	 * @param array $sync_result Result from wow_api sync methods
+	 * @return bool
+	 */
+	private function has_server_errors(array $sync_result): bool
+	{
+		if (empty($sync_result['errors']))
+		{
+			return false;
+		}
+		foreach (array_keys($sync_result['errors']) as $code)
+		{
+			if (is_int($code) && $code >= 500)
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 }

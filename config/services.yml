@@ -44,6 +44,7 @@ services:
         arguments:
             - '@avathar.bbguild_wow.api'
             - '@dbal.conn'
+            - '@avathar.bbguild.log'
             - '%avathar.bbguild.tables.bb_players%'
             - '%avathar.bbguild.tables.bb_guild%'
             - '%avathar.bbguild.tables.bb_games%'

@@ -210,7 +210,7 @@ class wow_api implements game_api_interface
 		$realm_slug = $this->to_slug($realm);
 
 		$api = new battlenet('character', $region, $game->getApikey(), $game->get_apilocale(), $game->get_privkey(), $ext_path, $this->cache);
-		$data = $api->character->getCharacter($realm_slug, strtolower($name));
+		$data = $api->character->getCharacter($realm_slug, $name);
 		unset($api);
 
 		if (isset($data['response']))
@@ -227,7 +227,7 @@ class wow_api implements game_api_interface
 	public function get_player_armory_url(string $name, string $realm, string $region): string
 	{
 		$realm_slug = $this->to_slug($realm);
-		return sprintf('https://worldofwarcraft.blizzard.com/en-%s/character/%s/%s/%s', $region, $region, $realm_slug, strtolower($name));
+		return sprintf('https://worldofwarcraft.blizzard.com/en-%s/character/%s/%s/%s', $region, $region, $realm_slug, mb_strtolower($name, 'UTF-8'));
 	}
 
 	/**
@@ -303,6 +303,7 @@ class wow_api implements game_api_interface
 		$time_limit = 20;
 		$fetched = 0;
 		$failed = 0;
+		$errors = array(); // error_code => [player_name, ...]
 
 		foreach ($players as $player)
 		{
@@ -312,14 +313,27 @@ class wow_api implements game_api_interface
 			}
 
 			$realm_slug = $player['player_realm'];
-			$char_name = strtolower($player['player_name']);
+			$char_name = $player['player_name'];
 
 			$response = $api->character->getCharacterMedia($realm_slug, $char_name);
 			$data = isset($response['response']) ? $response['response'] : null;
+			$http_code = isset($response['response_headers']['http_code']) ? (int) $response['response_headers']['http_code'] : 0;
 
 			if (!is_array($data) || isset($data['code']))
 			{
+				$error_code = isset($data['code']) ? (int) $data['code'] : $http_code;
+				if ($error_code === 0)
+				{
+					$error_code = 'unknown';
+				}
+				$errors[$error_code][] = $player['player_name'];
 				$failed++;
+
+				// Stop batch early on server errors (5xx) — API is likely down
+				if ($http_code >= 500)
+				{
+					break;
+				}
 				continue;
 			}
 
@@ -351,6 +365,7 @@ class wow_api implements game_api_interface
 			}
 			else
 			{
+				$errors['no_avatar'][] = $player['player_name'];
 				$failed++;
 			}
 		}
@@ -359,16 +374,21 @@ class wow_api implements game_api_interface
 
 		$remaining = count($players) - $fetched - $failed;
 		$message = sprintf('Fetched %d portraits.', $fetched);
-		if ($failed > 0)
+		if (!empty($errors))
 		{
-			$message .= sprintf(' %d failed (character may be inactive).', $failed);
+			$parts = array();
+			foreach ($errors as $code => $names)
+			{
+				$parts[] = sprintf('%s: %s', $this->error_label($code), implode(', ', $names));
+			}
+			$message .= sprintf(' %d failed [%s].', $failed, implode('; ', $parts));
 		}
 		if ($remaining > 0)
 		{
 			$message .= sprintf(' %d remaining.', $remaining);
 		}
 
-		return array('success' => true, 'message' => $message, 'count' => $fetched);
+		return array('success' => true, 'message' => $message, 'count' => $fetched, 'errors' => $errors);
 	}
 
 	/**
@@ -415,6 +435,7 @@ class wow_api implements game_api_interface
 		$time_limit = 20;
 		$fetched = 0;
 		$failed = 0;
+		$errors = array(); // error_code => [player_name, ...]
 
 		foreach ($players as $player)
 		{
@@ -425,13 +446,26 @@ class wow_api implements game_api_interface
 
 			$response = $api->character->getCharacterSpecializations(
 				$player['player_realm'],
-				strtolower($player['player_name'])
+				$player['player_name']
 			);
 			$data = isset($response['response']) ? $response['response'] : null;
+			$http_code = isset($response['response_headers']['http_code']) ? (int) $response['response_headers']['http_code'] : 0;
 
 			if (!is_array($data) || isset($data['code']))
 			{
+				$error_code = isset($data['code']) ? (int) $data['code'] : $http_code;
+				if ($error_code === 0)
+				{
+					$error_code = 'unknown';
+				}
+				$errors[$error_code][] = $player['player_name'];
 				$failed++;
+
+				// Stop batch early on server errors (5xx) — API is likely down
+				if ($http_code >= 500)
+				{
+					break;
+				}
 				continue;
 			}
 
@@ -451,6 +485,7 @@ class wow_api implements game_api_interface
 			}
 			else
 			{
+				$errors['no_spec'][] = $player['player_name'];
 				$failed++;
 			}
 		}
@@ -459,16 +494,44 @@ class wow_api implements game_api_interface
 
 		$remaining = count($players) - $fetched - $failed;
 		$message = sprintf('Fetched %d specs.', $fetched);
-		if ($failed > 0)
+		if (!empty($errors))
 		{
-			$message .= sprintf(' %d failed.', $failed);
+			$parts = array();
+			foreach ($errors as $code => $names)
+			{
+				$parts[] = sprintf('%s: %s', $this->error_label($code), implode(', ', $names));
+			}
+			$message .= sprintf(' %d failed [%s].', $failed, implode('; ', $parts));
 		}
 		if ($remaining > 0)
 		{
 			$message .= sprintf(' %d remaining.', $remaining);
 		}
 
-		return array('success' => true, 'message' => $message, 'count' => $fetched);
+		return array('success' => true, 'message' => $message, 'count' => $fetched, 'errors' => $errors);
+	}
+
+	/**
+	 * Return a human-readable label for an API error code.
+	 *
+	 * @param int|string $code HTTP status code or error key
+	 * @return string
+	 */
+	private function error_label($code): string
+	{
+		$labels = array(
+			404       => '404 Not Found',
+			403       => '403 Forbidden',
+			500       => '500 Server Error',
+			502       => '502 Bad Gateway',
+			503       => '503 Service Unavailable',
+			504       => '504 Gateway Timeout',
+			'no_avatar' => 'No avatar data',
+			'no_spec'   => 'No spec data',
+			'unknown'   => 'Unknown error',
+		);
+
+		return isset($labels[$code]) ? $labels[$code] : 'HTTP ' . $code;
 	}
 
 	/**
