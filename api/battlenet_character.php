@@ -50,7 +50,7 @@ class battlenet_character extends battlenet_resource
 			trigger_error($user->lang['WOWAPI_NO_REALMS']);
 		}
 
-		return $this->consume($realm_slug . '/' . strtolower($character_name), array());
+		return $this->consume($realm_slug . '/' . $this->normalize_name($character_name), array());
 	}
 
 	/**
@@ -62,7 +62,7 @@ class battlenet_character extends battlenet_resource
 	 */
 	public function getCharacterMedia(string $realm_slug, string $character_name): array
 	{
-		return $this->consume($realm_slug . '/' . strtolower($character_name) . '/character-media', array());
+		return $this->consume($realm_slug . '/' . $this->normalize_name($character_name) . '/character-media', array());
 	}
 
 	/**
@@ -74,6 +74,21 @@ class battlenet_character extends battlenet_resource
 	 */
 	public function getCharacterSpecializations(string $realm_slug, string $character_name): array
 	{
-		return $this->consume($realm_slug . '/' . strtolower($character_name) . '/specializations', array());
+		return $this->consume($realm_slug . '/' . $this->normalize_name($character_name) . '/specializations', array());
+	}
+
+	/**
+	 * Normalize a character name for the Battle.net API.
+	 *
+	 * The API expects lowercase names with proper Unicode handling.
+	 * PHP's strtolower() only handles ASCII; mb_strtolower() is needed
+	 * for characters like É→é, Å→å, Ð→ð, Cyrillic, etc.
+	 *
+	 * @param string $name Character name
+	 * @return string Lowercased name safe for API URLs
+	 */
+	private function normalize_name(string $name): string
+	{
+		return mb_strtolower(trim($name), 'UTF-8');
 	}
 }
