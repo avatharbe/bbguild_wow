@@ -61,4 +61,19 @@ $lang = array_merge(
 	'ACHIEV_SYNC_CATEGORIES'   => 'Kategorien synchronisieren',
 	'ACHIEV_SHOW_EMPTY'        => 'Alle Kategorien anzeigen',
 	'ACHIEV_HIDE_EMPTY'        => 'Leere Kategorien ausblenden',
+	'WOW_SYNC_PORTRAITS'       => 'Sync Portraits',
+	'WOW_SYNC_PORTRAITS_EXPLAIN' => 'Fetch character portraits from the Battle.net Character Media API. Processes ~20 characters per click.',
+	'WOW_SYNC_PROGRESS'        => 'Sync Progress',
+	'WOW_PHASE_ROSTER'         => 'Roster',
+	'WOW_PHASE_SPECS'          => 'Specializations',
+	'WOW_PHASE_PORTRAITS'      => 'Portraits',
+	'WOW_PHASE_CATEGORIES'     => 'Achievement Categories',
+	'WOW_PHASE_ACHIEVEMENTS'   => 'Achievements',
+	'WOW_GUILD_SYNC_EXPLAIN'   => 'Syncs data from the Battle.net API in 5 phases:<br />'
+		. '1. <strong>Roster</strong> — Guild roster endpoint (<code>/data/wow/guild/{realm}/{name}/roster</code>)<br />'
+		. '2. <strong>Specializations</strong> — Character Specializations API, per character (<code>/profile/wow/character/{realm}/{name}/specializations</code>)<br />'
+		. '3. <strong>Portraits</strong> — Character Media API, per character (<code>/profile/wow/character/{realm}/{name}/character-media</code>)<br />'
+		. '4. <strong>Achievement Categories</strong> — Achievement Category Index + per-category detail (<code>/data/wow/achievement-category/index</code>)<br />'
+		. '5. <strong>Achievements</strong> — Guild Achievements + per-achievement detail (<code>/data/wow/guild/{realm}/{name}/achievements</code>)<br />'
+		. 'Large guilds may take a few minutes. Achievement detail fetching is time-limited per batch.',
 ));

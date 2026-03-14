@@ -215,9 +215,11 @@ class listener implements EventSubscriberInterface
 			$board_url = generate_board_url();
 			$this->template->assign_vars(array(
 				'ARMORY_URL'      => $row['guildarmoryurl'],
-				'U_ROSTER_SYNC'   => $board_url . '/app.php/bbguild_wow/sync-roster/' . $guild_id,
-				'U_SPEC_SYNC'     => $board_url . '/app.php/bbguild_wow/sync-specs/' . $guild_id,
-				'U_PORTRAIT_SYNC' => $board_url . '/app.php/bbguild_wow/sync-portraits/' . $guild_id,
+				'U_ROSTER_SYNC'     => $board_url . '/app.php/bbguild_wow/sync-roster/' . $guild_id,
+				'U_SPEC_SYNC'       => $board_url . '/app.php/bbguild_wow/sync-specs/' . $guild_id,
+				'U_PORTRAIT_SYNC'   => $board_url . '/app.php/bbguild_wow/sync-portraits/' . $guild_id,
+				'U_CATEGORY_SYNC'   => $board_url . '/app.php/bbguild_wow/sync-categories/' . $guild_id,
+				'U_ACHIEV_SYNC'     => $board_url . '/app.php/bbguild_wow/sync-achievements/' . $guild_id,
 			));
 		}
 	}

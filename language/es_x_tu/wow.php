@@ -52,4 +52,30 @@ $lang = array_merge(
 	'ACHIEV_TOTAL_COMPLETED'   => 'Total completados',
 	'ACHIEV_RECENTLY_EARNED'   => 'Obtenidos recientemente',
 	'ACHIEV_POINTS_TOTAL'      => 'Puntos de logro',
+	'ACHIEV_COMPLETED_LABEL'   => 'achievements completed',
+
+	// Achievement browser
+	'ACHIEV_BACK'              => 'Logros',
+	'ACHIEV_NO_CATEGORIES'     => 'No hay categorías de logros sincronizadas. Sincroniza las categorías desde el ACP.',
+	'ACHIEV_NOT_COMPLETED'     => 'No completado',
+	'ACHIEV_CRITERIA'          => 'Criterios',
+	'ACHIEV_FEATS_OF_STRENGTH' => 'Feats of Strength',
+	'ACHIEV_SYNC_CATEGORIES'   => 'Sincronizar categorías',
+	'WOW_SYNC_PORTRAITS'       => 'Sync Portraits',
+	'WOW_SYNC_PORTRAITS_EXPLAIN' => 'Fetch character portraits from the Battle.net Character Media API. Processes ~20 characters per click.',
+	'WOW_SYNC_PROGRESS'        => 'Sync Progress',
+	'WOW_PHASE_ROSTER'         => 'Roster',
+	'WOW_PHASE_SPECS'          => 'Specializations',
+	'WOW_PHASE_PORTRAITS'      => 'Portraits',
+	'WOW_PHASE_CATEGORIES'     => 'Achievement Categories',
+	'WOW_PHASE_ACHIEVEMENTS'   => 'Achievements',
+	'WOW_GUILD_SYNC_EXPLAIN'   => 'Syncs data from the Battle.net API in 5 phases:<br />'
+		. '1. <strong>Roster</strong> — Guild roster endpoint (<code>/data/wow/guild/{realm}/{name}/roster</code>)<br />'
+		. '2. <strong>Specializations</strong> — Character Specializations API, per character (<code>/profile/wow/character/{realm}/{name}/specializations</code>)<br />'
+		. '3. <strong>Portraits</strong> — Character Media API, per character (<code>/profile/wow/character/{realm}/{name}/character-media</code>)<br />'
+		. '4. <strong>Achievement Categories</strong> — Achievement Category Index + per-category detail (<code>/data/wow/achievement-category/index</code>)<br />'
+		. '5. <strong>Achievements</strong> — Guild Achievements + per-achievement detail (<code>/data/wow/guild/{realm}/{name}/achievements</code>)<br />'
+		. 'Large guilds may take a few minutes. Achievement detail fetching is time-limited per batch.',
+	'ACHIEV_SHOW_EMPTY'        => 'Mostrar todas las categorías',
+	'ACHIEV_HIDE_EMPTY'        => 'Ocultar categorías vacías',
 ));

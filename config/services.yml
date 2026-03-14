@@ -66,6 +66,16 @@ services:
 
     # --- Controllers ---
 
+    avathar.bbguild_wow.achievement_sync_controller:
+        class: avathar\bbguild_wow\controller\achievement_sync_controller
+        arguments:
+            - '@avathar.bbguild_wow.achievement'
+            - '@dbal.conn'
+            - '@avathar.bbguild.log'
+            - '%avathar.bbguild.tables.bb_guild%'
+            - '%avathar.bbguild.tables.bb_games%'
+            - '%avathar.bbguild_wow.tables.bb_achievement%'
+
     avathar.bbguild_wow.achievement_controller:
         class: avathar\bbguild_wow\controller\achievement_controller
         arguments:
