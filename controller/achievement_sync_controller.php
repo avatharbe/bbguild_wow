@@ -97,14 +97,20 @@ class achievement_sync_controller
 		$total = (int) $this->db->sql_fetchfield('total');
 		$this->db->sql_freeresult($result);
 
-		$this->bbguildlog->log_insert(array(
-			'log_type'   => $sync_result['success'] ? 'L_ACTION_SPECS_SYNCED' : 'L_ERROR_SPECS_SYNCED',
-			'log_result' => $sync_result['success'] ? 'L_SUCCESS' : 'L_ERROR',
-			'log_action' => [$guild->getName(), 'Categories: ' . $sync_result['message']],
-		));
+		$is_done = $remaining === 0;
+
+		// Only log on final batch to avoid flooding
+		if ($is_done || !$sync_result['success'])
+		{
+			$this->bbguildlog->log_insert(array(
+				'log_type'   => $sync_result['success'] ? 'L_ACTION_SPECS_SYNCED' : 'L_ERROR_SPECS_SYNCED',
+				'log_result' => $sync_result['success'] ? 'L_SUCCESS' : 'L_ERROR',
+				'log_action' => [$guild->getName(), 'Categories: ' . $sync_result['message']],
+			));
+		}
 
 		return new JsonResponse(array(
-			'done'      => $remaining === 0,
+			'done'      => $is_done,
 			'fetched'   => $sync_result['count'],
 			'total'     => $total,
 			'remaining' => $remaining,
@@ -152,14 +158,20 @@ class achievement_sync_controller
 		$total = (int) $this->db->sql_fetchfield('total');
 		$this->db->sql_freeresult($result);
 
-		$this->bbguildlog->log_insert(array(
-			'log_type'   => $sync_result['success'] ? 'L_ACTION_SPECS_SYNCED' : 'L_ERROR_SPECS_SYNCED',
-			'log_result' => $sync_result['success'] ? 'L_SUCCESS' : 'L_ERROR',
-			'log_action' => [$guild->getName(), 'Achievements: ' . $sync_result['message']],
-		));
+		$is_done = $remaining === 0;
+
+		// Only log on final batch to avoid flooding
+		if ($is_done || !$sync_result['success'])
+		{
+			$this->bbguildlog->log_insert(array(
+				'log_type'   => $sync_result['success'] ? 'L_ACTION_SPECS_SYNCED' : 'L_ERROR_SPECS_SYNCED',
+				'log_result' => $sync_result['success'] ? 'L_SUCCESS' : 'L_ERROR',
+				'log_action' => [$guild->getName(), 'Achievements: ' . $sync_result['message']],
+			));
+		}
 
 		return new JsonResponse(array(
-			'done'      => $remaining === 0,
+			'done'      => $is_done,
 			'fetched'   => $sync_result['count'],
 			'total'     => $total,
 			'remaining' => $remaining,

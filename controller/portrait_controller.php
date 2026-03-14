@@ -233,24 +233,29 @@ class portrait_controller
 		$this->db->sql_freeresult($result);
 
 		$has_server_errors = $this->has_server_errors($sync_result);
+		$is_done = $remaining_after === 0 || $has_server_errors;
 
-		$this->bbguildlog->log_insert(array(
-			'log_type'   => ($sync_result['count'] > 0 && !$has_server_errors) ? 'L_ACTION_SPECS_SYNCED' : 'L_ERROR_SPECS_SYNCED',
-			'log_result' => ($sync_result['count'] > 0 && !$has_server_errors) ? 'L_SUCCESS' : 'L_ERROR',
-			'log_action' => [$guild_name, $sync_result['message']],
-		));
-
-		if ($has_server_errors)
+		// Only log on final batch or server errors to avoid flooding
+		if ($is_done || $has_server_errors)
 		{
 			$this->bbguildlog->log_insert(array(
-				'log_type'   => 'L_ERROR_ARMORY_DOWN',
-				'log_result' => 'L_ERROR',
-				'log_action' => [$guild_name . ': specs sync interrupted by server error'],
+				'log_type'   => ($sync_result['count'] > 0 && !$has_server_errors) ? 'L_ACTION_SPECS_SYNCED' : 'L_ERROR_SPECS_SYNCED',
+				'log_result' => ($sync_result['count'] > 0 && !$has_server_errors) ? 'L_SUCCESS' : 'L_ERROR',
+				'log_action' => [$guild_name, $sync_result['message']],
 			));
+
+			if ($has_server_errors)
+			{
+				$this->bbguildlog->log_insert(array(
+					'log_type'   => 'L_ERROR_ARMORY_DOWN',
+					'log_result' => 'L_ERROR',
+					'log_action' => [$guild_name . ': specs sync interrupted by server error'],
+				));
+			}
 		}
 
 		return new JsonResponse(array(
-			'done'      => $remaining_after === 0 || $has_server_errors,
+			'done'      => $is_done,
 			'fetched'   => $sync_result['count'],
 			'total'     => $total,
 			'remaining' => $remaining_after,
@@ -345,24 +350,29 @@ class portrait_controller
 		$this->db->sql_freeresult($result);
 
 		$has_server_errors = $this->has_server_errors($sync_result);
+		$is_done = $remaining_after === 0 || $has_server_errors;
 
-		$this->bbguildlog->log_insert(array(
-			'log_type'   => ($sync_result['count'] > 0 && !$has_server_errors) ? 'L_ACTION_PORTRAITS_SYNCED' : 'L_ERROR_PORTRAITS_SYNCED',
-			'log_result' => ($sync_result['count'] > 0 && !$has_server_errors) ? 'L_SUCCESS' : 'L_ERROR',
-			'log_action' => [$guild_name, $sync_result['message']],
-		));
-
-		if ($has_server_errors)
+		// Only log on final batch or server errors to avoid flooding
+		if ($is_done || $has_server_errors)
 		{
 			$this->bbguildlog->log_insert(array(
-				'log_type'   => 'L_ERROR_ARMORY_DOWN',
-				'log_result' => 'L_ERROR',
-				'log_action' => [$guild_name . ': portrait sync interrupted by server error'],
+				'log_type'   => ($sync_result['count'] > 0 && !$has_server_errors) ? 'L_ACTION_PORTRAITS_SYNCED' : 'L_ERROR_PORTRAITS_SYNCED',
+				'log_result' => ($sync_result['count'] > 0 && !$has_server_errors) ? 'L_SUCCESS' : 'L_ERROR',
+				'log_action' => [$guild_name, $sync_result['message']],
 			));
+
+			if ($has_server_errors)
+			{
+				$this->bbguildlog->log_insert(array(
+					'log_type'   => 'L_ERROR_ARMORY_DOWN',
+					'log_result' => 'L_ERROR',
+					'log_action' => [$guild_name . ': portrait sync interrupted by server error'],
+				));
+			}
 		}
 
 		return new JsonResponse(array(
-			'done'      => $remaining_after === 0 || $has_server_errors,
+			'done'      => $is_done,
 			'fetched'   => $sync_result['count'],
 			'total'     => $total,
 			'remaining' => $remaining_after,
