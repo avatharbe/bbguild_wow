@@ -74,6 +74,20 @@ abstract class battlenet_resource
 	/** @var string Namespace type: 'static', 'dynamic', or 'profile' */
 	public $namespace_type = 'dynamic';
 
+	/** @var string Game edition: 'retail', 'classic_era', 'classic_prog', 'classic_ann' */
+	public $edition = 'retail';
+
+	/**
+	 * Edition-to-namespace infix mapping.
+	 * Retail has no infix; Classic editions insert between type and region.
+	 */
+	const EDITION_INFIXES = array(
+		'retail'       => '',
+		'classic_era'  => 'classic1x',
+		'classic_prog' => 'classic',
+		'classic_ann'  => 'classicann',
+	);
+
 	/** @var array */
 	protected $methods_allowed;
 
@@ -176,10 +190,18 @@ abstract class battlenet_resource
 	/**
 	 * Build the Battlenet-Namespace header value.
 	 *
-	 * @return string e.g. "dynamic-eu", "static-us", "profile-kr"
+	 * For retail: "profile-eu", "static-us"
+	 * For Classic: "profile-classic-eu", "static-classic1x-us"
+	 *
+	 * @return string
 	 */
 	protected function get_namespace()
 	{
+		$infix = isset(self::EDITION_INFIXES[$this->edition]) ? self::EDITION_INFIXES[$this->edition] : '';
+		if ($infix !== '')
+		{
+			return $this->namespace_type . '-' . $infix . '-' . $this->region;
+		}
 		return $this->namespace_type . '-' . $this->region;
 	}
 

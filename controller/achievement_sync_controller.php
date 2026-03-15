@@ -81,6 +81,7 @@ class achievement_sync_controller
 
 		$this->achievement->setGame($game, 0);
 		$this->achievement->setGuildId($guild_id);
+		$this->achievement->setEdition($guild->getGameEdition());
 
 		$sync_result = $this->achievement->syncCategories($game);
 
@@ -142,6 +143,7 @@ class achievement_sync_controller
 
 		$this->achievement->setGame($game, 0);
 		$this->achievement->setGuildId($guild_id);
+		$this->achievement->setEdition($guild->getGameEdition());
 
 		$sync_result = $this->achievement->setAchievements($guild, $game);
 

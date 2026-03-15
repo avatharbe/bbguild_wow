@@ -79,4 +79,12 @@ $lang = array_merge(
 		. '1. <strong>Achievement Categories</strong> — Category index + per-category detail (<code>/data/wow/achievement-category/index</code>)<br />'
 		. '2. <strong>Achievements</strong> — Guild achievements + per-achievement detail (<code>/data/wow/guild/{realm}/{name}/achievements</code>)<br />'
 		. 'Detail fetching is time-limited per batch.',
+
+	// Game edition (Classic support)
+	'WOW_EDITION'              => 'Édition du jeu',
+	'WOW_EDITION_EXPLAIN'      => 'Sélectionnez l\'édition WoW pour cette guilde. Cela détermine le namespace API utilisé pour la récupération des données.',
+	'WOW_EDITION_RETAIL'       => 'Retail',
+	'WOW_EDITION_CLASSIC_ERA'  => 'Classic Era',
+	'WOW_EDITION_CLASSIC_PROG' => 'Classic (Progression)',
+	'WOW_EDITION_CLASSIC_ANN'  => 'Classic (Anniversaire)',
 ));

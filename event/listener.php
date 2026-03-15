@@ -63,6 +63,7 @@ class listener implements EventSubscriberInterface
 			'avathar.bbguild.acp_editgames_display'     => 'on_editgames_display',
 			'avathar.bbguild.acp_editgames_submit'      => 'on_editgames_submit',
 			'avathar.bbguild.acp_editguild_display'     => 'on_editguild_display',
+			'avathar.bbguild.acp_editguild_submit'      => 'on_editguild_submit',
 			'avathar.bbguild.acp_listplayers_display'   => 'on_listplayers_display',
 			'avathar.bbguild.acp_config_display'        => 'on_config_display',
 			'avathar.bbguild.acp_config_submit'         => 'on_config_submit',
@@ -222,6 +223,43 @@ class listener implements EventSubscriberInterface
 				'U_ACHIEV_SYNC'     => $board_url . '/app.php/bbguild_wow/sync-achievements/' . $guild_id,
 			));
 		}
+
+		// Assign edition dropdown template vars
+		$current_edition = $updateguild->getGameEdition();
+		$editions = array(
+			'retail'       => 'WOW_EDITION_RETAIL',
+			'classic_era'  => 'WOW_EDITION_CLASSIC_ERA',
+			'classic_prog' => 'WOW_EDITION_CLASSIC_PROG',
+			'classic_ann'  => 'WOW_EDITION_CLASSIC_ANN',
+		);
+		foreach ($editions as $value => $lang_key)
+		{
+			$this->template->assign_block_vars('wow_edition_row', array(
+				'VALUE'    => $value,
+				'SELECTED' => ($current_edition === $value) ? ' selected="selected"' : '',
+				'OPTION'   => $lang_key,
+			));
+		}
+		$this->template->assign_vars(array(
+			'GAME_EDITION' => $current_edition,
+		));
+	}
+
+	/**
+	 * Handle game edition on guild update submit for WoW guilds.
+	 *
+	 * @param \phpbb\event\data $event
+	 */
+	public function on_editguild_submit($event)
+	{
+		$game_id = $event['game_id'];
+		if ($game_id !== 'wow')
+		{
+			return;
+		}
+
+		$updateguild = $event['updateguild'];
+		$updateguild->setGameEdition($this->request->variable('game_edition', 'retail'));
 	}
 
 	/**

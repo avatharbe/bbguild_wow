@@ -65,7 +65,7 @@ class portrait_controller
 		$guild_id = (int) $guild_id;
 
 		// Get guild data
-		$sql = 'SELECT name, realm, region, min_armory, game_id FROM ' . $this->guild_table .
+		$sql = 'SELECT name, realm, region, min_armory, game_id, game_edition FROM ' . $this->guild_table .
 			' WHERE id = ' . $guild_id;
 		$result = $this->db->sql_query($sql);
 		$guild_row = $this->db->sql_fetchrow($result);
@@ -99,13 +99,16 @@ class portrait_controller
 		}
 
 		$region = !empty($guild_row['region']) ? $guild_row['region'] : $game_row['region'];
+		$edition = !empty($guild_row['game_edition']) ? $guild_row['game_edition'] : 'retail';
 
 		// Fetch guild data + roster
+		$params = array('members');
+		$params['edition'] = $edition;
 		$data = $this->wow_api->fetch_guild_data(
 			$guild_row['name'],
 			$guild_row['realm'],
 			$region,
-			array('members')
+			$params
 		);
 
 		if (!is_array($data) || isset($data['code']))
@@ -187,13 +190,14 @@ class portrait_controller
 			return new JsonResponse(array('error' => 'API credentials not configured', 'done' => true), 400);
 		}
 
-		$sql = 'SELECT name, region FROM ' . $this->guild_table . ' WHERE id = ' . $guild_id;
+		$sql = 'SELECT name, region, game_edition FROM ' . $this->guild_table . ' WHERE id = ' . $guild_id;
 		$result = $this->db->sql_query($sql);
 		$guild_row = $this->db->sql_fetchrow($result);
 		$this->db->sql_freeresult($result);
 
 		$guild_name = $guild_row ? $guild_row['name'] : '(unknown)';
 		$region = (!empty($guild_row['region'])) ? $guild_row['region'] : $game_row['region'];
+		$edition = (!empty($guild_row['game_edition'])) ? $guild_row['game_edition'] : 'retail';
 
 		// Count total and remaining
 		$sql = 'SELECT COUNT(*) AS total FROM ' . $this->players_table .
@@ -221,7 +225,7 @@ class portrait_controller
 
 		$sync_result = $this->wow_api->sync_specs(
 			$guild_id, $region,
-			$game_row['apikey'], $game_row['apilocale'], $game_row['privkey']
+			$game_row['apikey'], $game_row['apilocale'], $game_row['privkey'], $edition
 		);
 
 		$sql = 'SELECT COUNT(*) AS remaining FROM ' . $this->players_table .
@@ -293,8 +297,8 @@ class portrait_controller
 			), 400);
 		}
 
-		// Get guild name and region (fall back to game region)
-		$sql = 'SELECT name, region FROM ' . $this->guild_table .
+		// Get guild name, region, and edition (fall back to game region)
+		$sql = 'SELECT name, region, game_edition FROM ' . $this->guild_table .
 			' WHERE id = ' . $guild_id;
 		$result = $this->db->sql_query($sql);
 		$guild_row = $this->db->sql_fetchrow($result);
@@ -302,6 +306,7 @@ class portrait_controller
 
 		$guild_name = $guild_row ? $guild_row['name'] : '(unknown)';
 		$region = (!empty($guild_row['region'])) ? $guild_row['region'] : $game_row['region'];
+		$edition = (!empty($guild_row['game_edition'])) ? $guild_row['game_edition'] : 'retail';
 
 		// Count total and remaining
 		$sql = 'SELECT COUNT(*) AS total FROM ' . $this->players_table .
@@ -337,7 +342,8 @@ class portrait_controller
 			$region,
 			$game_row['apikey'],
 			$game_row['apilocale'],
-			$game_row['privkey']
+			$game_row['privkey'],
+			$edition
 		);
 
 		// Recount remaining

@@ -80,8 +80,9 @@ class battlenet
 	 * @param string               $ext_path
 	 * @param \phpbb\cache\service $cache
 	 * @param int                  $cacheTtl
+	 * @param string               $edition   Game edition (retail, classic_era, classic_prog, classic_ann)
 	 */
-	public function __construct($API, $region, $apikey, $locale, $privkey, $ext_path, \phpbb\cache\service $cache, $cacheTtl = 3600)
+	public function __construct($API, $region, $apikey, $locale, $privkey, $ext_path, \phpbb\cache\service $cache, $cacheTtl = 3600, $edition = 'retail')
 	{
 		global $user;
 
@@ -111,6 +112,7 @@ class battlenet
 				$this->Realm->locale = $locale;
 				$this->Realm->privkey = $privkey;
 				$this->Realm->namespace_type = $namespace_type;
+				$this->Realm->edition = $edition;
 				break;
 			case 'guild':
 				$this->guild = new battlenet_guild($this->cache, $region, $this->cacheTtl);
@@ -118,6 +120,7 @@ class battlenet
 				$this->guild->locale = $locale;
 				$this->guild->privkey = $privkey;
 				$this->guild->namespace_type = $namespace_type;
+				$this->guild->edition = $edition;
 				break;
 			case 'character':
 				$this->character = new battlenet_character($this->cache, $region, $this->cacheTtl);
@@ -125,6 +128,7 @@ class battlenet
 				$this->character->locale = $locale;
 				$this->character->privkey = $privkey;
 				$this->character->namespace_type = $namespace_type;
+				$this->character->edition = $edition;
 				break;
 			case 'achievement':
 				$this->achievement = new battlenet_achievement($this->cache, $region, $this->cacheTtl);
@@ -132,6 +136,7 @@ class battlenet
 				$this->achievement->locale = $locale;
 				$this->achievement->privkey = $privkey;
 				$this->achievement->namespace_type = $namespace_type;
+				$this->achievement->edition = $edition;
 				break;
 			case 'achievement-category':
 				$this->achievement_category = new battlenet_achievement_category($this->cache, $region, $this->cacheTtl);
@@ -139,6 +144,7 @@ class battlenet
 				$this->achievement_category->locale = $locale;
 				$this->achievement_category->privkey = $privkey;
 				$this->achievement_category->namespace_type = $namespace_type;
+				$this->achievement_category->edition = $edition;
 				break;
 			case 'playable-data':
 				$this->static_data = new battlenet_static_data($this->cache, $region, $this->cacheTtl);
@@ -146,6 +152,7 @@ class battlenet
 				$this->static_data->locale = $locale;
 				$this->static_data->privkey = $privkey;
 				$this->static_data->namespace_type = $namespace_type;
+				$this->static_data->edition = $edition;
 				break;
 		}
 	}

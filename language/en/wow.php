@@ -81,4 +81,12 @@ $lang = array_merge(
 		. 'Detail fetching is time-limited per batch.',
 	'ACHIEV_SHOW_EMPTY'        => 'Show all categories',
 	'ACHIEV_HIDE_EMPTY'        => 'Hide empty categories',
+
+	// Game edition (Classic support)
+	'WOW_EDITION'              => 'Game Edition',
+	'WOW_EDITION_EXPLAIN'      => 'Select the WoW edition for this guild. This determines the API namespace used for data retrieval.',
+	'WOW_EDITION_RETAIL'       => 'Retail',
+	'WOW_EDITION_CLASSIC_ERA'  => 'Classic Era',
+	'WOW_EDITION_CLASSIC_PROG' => 'Classic (Progression)',
+	'WOW_EDITION_CLASSIC_ANN'  => 'Classic (Anniversary)',
 ));

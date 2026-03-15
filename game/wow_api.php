@@ -105,9 +105,10 @@ class wow_api implements game_api_interface
 		$ext_path = $this->get_ext_path($phpbb_container);
 		$realm_slug = $this->to_slug($realm);
 		$name_slug = $this->to_slug($guild_name);
+		$edition = isset($params['edition']) ? $params['edition'] : 'retail';
 
 		// Fetch guild profile
-		$api = new battlenet('guild', $region, $game->getApikey(), $game->get_apilocale(), $game->get_privkey(), $ext_path, $this->cache);
+		$api = new battlenet('guild', $region, $game->getApikey(), $game->get_apilocale(), $game->get_privkey(), $ext_path, $this->cache, 3600, $edition);
 		$guild_data = $api->guild->getGuild($realm_slug, $name_slug);
 		unset($api);
 
@@ -120,7 +121,7 @@ class wow_api implements game_api_interface
 		// Fetch roster if requested
 		if (in_array('members', $params))
 		{
-			$api = new battlenet('guild', $region, $game->getApikey(), $game->get_apilocale(), $game->get_privkey(), $ext_path, $this->cache);
+			$api = new battlenet('guild', $region, $game->getApikey(), $game->get_apilocale(), $game->get_privkey(), $ext_path, $this->cache, 3600, $edition);
 			$roster_data = $api->guild->getRoster($realm_slug, $name_slug);
 			unset($api);
 
@@ -196,7 +197,7 @@ class wow_api implements game_api_interface
 	/**
 	 * @inheritdoc
 	 */
-	public function fetch_character_data(string $name, string $realm, string $region)
+	public function fetch_character_data(string $name, string $realm, string $region, string $edition = 'retail')
 	{
 		global $phpbb_container;
 
@@ -209,7 +210,7 @@ class wow_api implements game_api_interface
 		$ext_path = $this->get_ext_path($phpbb_container);
 		$realm_slug = $this->to_slug($realm);
 
-		$api = new battlenet('character', $region, $game->getApikey(), $game->get_apilocale(), $game->get_privkey(), $ext_path, $this->cache);
+		$api = new battlenet('character', $region, $game->getApikey(), $game->get_apilocale(), $game->get_privkey(), $ext_path, $this->cache, 3600, $edition);
 		$data = $api->character->getCharacter($realm_slug, $name);
 		unset($api);
 
@@ -259,7 +260,7 @@ class wow_api implements game_api_interface
 	 * @param string $privkey
 	 * @return array Result with 'success', 'message', 'count'
 	 */
-	public function sync_portraits(int $guild_id, string $region, string $apikey, string $locale, string $privkey): array
+	public function sync_portraits(int $guild_id, string $region, string $apikey, string $locale, string $privkey, string $edition = 'retail'): array
 	{
 		global $phpbb_root_path, $phpbb_container;
 		$db = $this->db;
@@ -297,7 +298,7 @@ class wow_api implements game_api_interface
 			return array('success' => true, 'message' => 'All player portraits are up to date.', 'count' => 0);
 		}
 
-		$api = new battlenet('character', $region, $apikey, $locale, $privkey, '', $this->cache);
+		$api = new battlenet('character', $region, $apikey, $locale, $privkey, '', $this->cache, 3600, $edition);
 
 		$time_start = time();
 		$time_limit = 20;
@@ -411,7 +412,7 @@ class wow_api implements game_api_interface
 	 * @param string $privkey
 	 * @return array Result with 'success', 'message', 'count'
 	 */
-	public function sync_specs(int $guild_id, string $region, string $apikey, string $locale, string $privkey): array
+	public function sync_specs(int $guild_id, string $region, string $apikey, string $locale, string $privkey, string $edition = 'retail'): array
 	{
 		$db = $this->db;
 
@@ -437,7 +438,7 @@ class wow_api implements game_api_interface
 			return array('success' => true, 'message' => 'All player specs are up to date.', 'count' => 0);
 		}
 
-		$api = new battlenet('character', $region, $apikey, $locale, $privkey, '', $this->cache);
+		$api = new battlenet('character', $region, $apikey, $locale, $privkey, '', $this->cache, 3600, $edition);
 
 		$time_start = time();
 		$time_limit = 20;
@@ -785,9 +786,10 @@ class wow_api implements game_api_interface
 	 * @param string $region
 	 * @return array Map of class_id => class_name
 	 */
-	public function get_playable_classes(string $region): array
+	public function get_playable_classes(string $region, string $edition = 'retail'): array
 	{
-		$cached = $this->cache->get(self::CACHE_KEY_CLASSES . '_' . $region);
+		$cache_key = self::CACHE_KEY_CLASSES . '_' . $edition . '_' . $region;
+		$cached = $this->cache->get($cache_key);
 		if ($cached !== false)
 		{
 			return $cached;
@@ -801,7 +803,7 @@ class wow_api implements game_api_interface
 		}
 
 		$ext_path = $this->get_ext_path($phpbb_container);
-		$api = new battlenet('playable-data', $region, $game->getApikey(), $game->get_apilocale(), $game->get_privkey(), $ext_path, $this->cache);
+		$api = new battlenet('playable-data', $region, $game->getApikey(), $game->get_apilocale(), $game->get_privkey(), $ext_path, $this->cache, 3600, $edition);
 		$data = $api->static_data->getPlayableClasses();
 		unset($api);
 
@@ -819,7 +821,7 @@ class wow_api implements game_api_interface
 
 		if (!empty($map))
 		{
-			$this->cache->put(self::CACHE_KEY_CLASSES . '_' . $region, $map, self::STATIC_CACHE_TTL);
+			$this->cache->put($cache_key, $map, self::STATIC_CACHE_TTL);
 		}
 
 		return $map;
@@ -831,9 +833,10 @@ class wow_api implements game_api_interface
 	 * @param string $region
 	 * @return array Map of race_id => race_name
 	 */
-	public function get_playable_races(string $region): array
+	public function get_playable_races(string $region, string $edition = 'retail'): array
 	{
-		$cached = $this->cache->get(self::CACHE_KEY_RACES . '_' . $region);
+		$cache_key = self::CACHE_KEY_RACES . '_' . $edition . '_' . $region;
+		$cached = $this->cache->get($cache_key);
 		if ($cached !== false)
 		{
 			return $cached;
@@ -847,7 +850,7 @@ class wow_api implements game_api_interface
 		}
 
 		$ext_path = $this->get_ext_path($phpbb_container);
-		$api = new battlenet('playable-data', $region, $game->getApikey(), $game->get_apilocale(), $game->get_privkey(), $ext_path, $this->cache);
+		$api = new battlenet('playable-data', $region, $game->getApikey(), $game->get_apilocale(), $game->get_privkey(), $ext_path, $this->cache, 3600, $edition);
 		$data = $api->static_data->getPlayableRaces();
 		unset($api);
 
@@ -865,7 +868,7 @@ class wow_api implements game_api_interface
 
 		if (!empty($map))
 		{
-			$this->cache->put(self::CACHE_KEY_RACES . '_' . $region, $map, self::STATIC_CACHE_TTL);
+			$this->cache->put($cache_key, $map, self::STATIC_CACHE_TTL);
 		}
 
 		return $map;

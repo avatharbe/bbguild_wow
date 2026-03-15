@@ -130,6 +130,12 @@ class achievement
 	 */
 	private $game;
 
+	/**
+	 * Game edition for API namespace selection.
+	 * @var string
+	 */
+	private $edition = 'retail';
+
 	/***************************************/
 
 	/**
@@ -402,6 +408,14 @@ class achievement
 	}
 
 	/**
+	 * @param string $edition
+	 */
+	public function setEdition(string $edition)
+	{
+		$this->edition = $edition;
+	}
+
+	/**
 	 * get achievement (no track info)
 	 * @return int
 	 */
@@ -619,7 +633,7 @@ class achievement
 		$locale = $game->get_apilocale();
 
 		// First verify the guild exists by fetching the basic guild profile
-		$api = new battlenet('guild', $region, $apikey, $locale, $privkey, '', $cache);
+		$api = new battlenet('guild', $region, $apikey, $locale, $privkey, '', $cache, 3600, $this->edition);
 
 		$guild_response = $api->guild->getGuild($realm_slug, $name_slug);
 		$guild_data = isset($guild_response['response']) ? $guild_response['response'] : array();
@@ -772,7 +786,7 @@ class achievement
 		if (!empty($incomplete_ids))
 		{
 			$detail_api = new battlenet('achievement', $region, $apikey,
-				$game->get_apilocale(), $privkey, '', $cache);
+				$game->get_apilocale(), $privkey, '', $cache, 3600, $this->edition);
 		}
 
 		$detail_count = 0;
@@ -859,7 +873,7 @@ class achievement
 		$cache = $this->cache;
 
 		$api = new battlenet('achievement', $game->getRegion(), $game->getApikey(),
-			$game->get_apilocale(), $game->get_privkey(), '', $cache);
+			$game->get_apilocale(), $game->get_privkey(), '', $cache, 3600, $this->edition);
 		$response = $api->achievement->getAchievementDetail($achievement_id);
 		unset($api);
 
@@ -1152,7 +1166,7 @@ class achievement
 		$locale = $game->get_apilocale();
 
 		// Fetch the category index
-		$api = new battlenet('achievement-category', $region, $apikey, $locale, $privkey, '', $cache);
+		$api = new battlenet('achievement-category', $region, $apikey, $locale, $privkey, '', $cache, 3600, $this->edition);
 		$response = $api->achievement_category->getCategoryIndex();
 		$data = isset($response['response']) ? $response['response'] : null;
 

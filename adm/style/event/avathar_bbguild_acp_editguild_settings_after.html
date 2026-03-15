@@ -1,0 +1,14 @@
+{% if GAME_ID == 'wow' %}
+<dl>
+    <dt>
+        <label for="game_edition">{{ lang('WOW_EDITION') }}:</label><br /><span>{{ lang('WOW_EDITION_EXPLAIN') }}</span>
+    </dt>
+    <dd>
+        <select id="game_edition" name="game_edition" class="input">
+            {% for wow_edition_row in loops.wow_edition_row %}
+            <option value="{{ wow_edition_row.VALUE }}"{{ wow_edition_row.SELECTED }}>{{ lang(wow_edition_row.OPTION) }}</option>
+            {% endfor %}
+        </select>
+    </dd>
+</dl>
+{% endif %}
