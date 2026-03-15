@@ -18,7 +18,7 @@ class release_2_0_0_b2 extends \phpbb\db\migration\container_aware_migration
 	{
 		return [
 			'\phpbb\db\migration\data\v320\v320',
-			'\avathar\bbguild\migrations\basics\schema',
+			'\avathar\bbguild\migrations\v200b3\release_2_0_0_b3',
 		];
 	}
 

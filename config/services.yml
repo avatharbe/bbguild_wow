@@ -35,6 +35,7 @@ services:
             - '@template'
             - '@dbal.conn'
             - '@request'
+            - '@controller.helper'
             - '%avathar.bbguild_wow.tables.bb_guild_wow%'
         tags:
             - { name: event.listener }
@@ -97,6 +98,7 @@ services:
             - '@config'
             - '@dbal.conn'
             - '@template'
+            - '@controller.helper'
             - '%avathar.bbguild_wow.tables.bb_achievement%'
             - '%avathar.bbguild_wow.tables.bb_achievement_track%'
             - '%avathar.bbguild_wow.tables.bb_guild_wow%'

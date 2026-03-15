@@ -15,6 +15,7 @@ namespace avathar\bbguild_wow\portal\modules;
 use avathar\bbguild\portal\modules\module_base;
 use avathar\bbguild_wow\model\achievement;
 use phpbb\config\config;
+use phpbb\controller\helper;
 use phpbb\db\driver\driver_interface;
 use phpbb\template\template;
 
@@ -34,6 +35,9 @@ class achievements extends module_base
 	/** @var template */
 	protected template $template;
 
+	/** @var helper */
+	protected helper $helper;
+
 	/** @var string */
 	protected string $achievement_table;
 
@@ -50,6 +54,7 @@ class achievements extends module_base
 		config $config,
 		driver_interface $db,
 		template $template,
+		helper $helper,
 		string $achievement_table,
 		string $achievement_track_table,
 		string $guild_wow_table,
@@ -59,6 +64,7 @@ class achievements extends module_base
 		$this->config = $config;
 		$this->db = $db;
 		$this->template = $template;
+		$this->helper = $helper;
 		$this->achievement_table = $achievement_table;
 		$this->achievement_track_table = $achievement_track_table;
 		$this->guild_wow_table = $guild_wow_table;
@@ -115,13 +121,17 @@ class achievements extends module_base
 			'ACHIEV_TOTAL_COUNT' => $sum_total,
 		));
 
-		// Assign AJAX route base URLs for JS
-		// Use generate_board_url() to build absolute paths that work regardless of current page URL
-		$board_url = generate_board_url();
+		// Assign AJAX route base URLs for JS — use helper->route() for correct paths on any installation
+		$achiev_list_url = $this->helper->route('avathar_bbguild_wow_achiev_list', array('guild_id' => (int) $this->guild_id, 'category_id' => 0));
+		$achiev_detail_url = $this->helper->route('avathar_bbguild_wow_achiev_detail', array('guild_id' => (int) $this->guild_id, 'achievement_id' => 0));
+		// Strip the trailing placeholder "0" so JS can append the real ID
+		$achiev_list_base = substr($achiev_list_url, 0, strrpos($achiev_list_url, '0'));
+		$achiev_detail_base = substr($achiev_detail_url, 0, strrpos($achiev_detail_url, '0'));
+
 		$this->template->assign_vars(array(
 			'ACHIEV_GUILD_ID'         => (int) $this->guild_id,
-			'U_ACHIEV_LIST_BASE'      => $board_url . '/app.php/bbguild_wow/achievements/list/' . (int) $this->guild_id . '/',
-			'U_ACHIEV_DETAIL_BASE'    => $board_url . '/app.php/bbguild_wow/achievements/detail/' . (int) $this->guild_id . '/',
+			'U_ACHIEV_LIST_BASE'      => $achiev_list_base,
+			'U_ACHIEV_DETAIL_BASE'    => $achiev_detail_base,
 			'S_ACHIEV_HAS_CATEGORIES' => !empty($categories),
 			'S_ACHIEV_HIDE_EMPTY'     => $hide_empty,
 		));

@@ -14,6 +14,7 @@
 namespace avathar\bbguild_wow\event;
 
 use phpbb\config\config;
+use phpbb\controller\helper;
 use phpbb\db\driver\driver_interface;
 use phpbb\request\request;
 use phpbb\template\template;
@@ -33,6 +34,9 @@ class listener implements EventSubscriberInterface
 	/** @var request */
 	private $request;
 
+	/** @var helper */
+	private $helper;
+
 	/** @var string */
 	private $guild_wow_table;
 
@@ -41,14 +45,16 @@ class listener implements EventSubscriberInterface
 	 * @param template         $template
 	 * @param driver_interface $db
 	 * @param request          $request
+	 * @param helper           $helper
 	 * @param string           $guild_wow_table
 	 */
-	public function __construct(config $config, template $template, driver_interface $db, request $request, $guild_wow_table)
+	public function __construct(config $config, template $template, driver_interface $db, request $request, helper $helper, $guild_wow_table)
 	{
 		$this->config = $config;
 		$this->template = $template;
 		$this->db = $db;
 		$this->request = $request;
+		$this->helper = $helper;
 		$this->guild_wow_table = $guild_wow_table;
 	}
 
@@ -234,14 +240,13 @@ class listener implements EventSubscriberInterface
 
 		if ($row)
 		{
-			$board_url = generate_board_url();
 			$this->template->assign_vars(array(
-				'ARMORY_URL'      => $row['guildarmoryurl'],
-				'U_ROSTER_SYNC'     => $board_url . '/app.php/bbguild_wow/sync-roster/' . $guild_id,
-				'U_SPEC_SYNC'       => $board_url . '/app.php/bbguild_wow/sync-specs/' . $guild_id,
-				'U_PORTRAIT_SYNC'   => $board_url . '/app.php/bbguild_wow/sync-portraits/' . $guild_id,
-				'U_CATEGORY_SYNC'   => $board_url . '/app.php/bbguild_wow/sync-categories/' . $guild_id,
-				'U_ACHIEV_SYNC'     => $board_url . '/app.php/bbguild_wow/sync-achievements/' . $guild_id,
+				'ARMORY_URL'        => $row['guildarmoryurl'],
+				'U_ROSTER_SYNC'     => $this->helper->route('avathar_bbguild_wow_sync_roster', array('guild_id' => $guild_id)),
+				'U_SPEC_SYNC'       => $this->helper->route('avathar_bbguild_wow_sync_specs', array('guild_id' => $guild_id)),
+				'U_PORTRAIT_SYNC'   => $this->helper->route('avathar_bbguild_wow_sync_portraits', array('guild_id' => $guild_id)),
+				'U_CATEGORY_SYNC'   => $this->helper->route('avathar_bbguild_wow_sync_categories', array('guild_id' => $guild_id)),
+				'U_ACHIEV_SYNC'     => $this->helper->route('avathar_bbguild_wow_sync_achievements', array('guild_id' => $guild_id)),
 			));
 		}
 	}
