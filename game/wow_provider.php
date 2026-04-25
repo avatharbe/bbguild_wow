@@ -12,8 +12,6 @@
 namespace avathar\bbguild_wow\game;
 
 use avathar\bbguild\model\games\game_provider_interface;
-use avathar\bbguild\model\games\game_install_interface;
-use avathar\bbguild\model\games\game_api_interface;
 
 /**
  * Class wow_provider
@@ -62,7 +60,7 @@ class wow_provider implements game_provider_interface
 	/**
 	 * @inheritdoc
 	 */
-	public function get_installer(): game_install_interface
+	public function get_installer(): \avathar\bbguild\model\games\game_install_interface
 	{
 		return $this->installer;
 	}
@@ -102,7 +100,7 @@ class wow_provider implements game_provider_interface
 	/**
 	 * @inheritdoc
 	 */
-	public function get_api(): ?game_api_interface
+	public function get_api(): ?\avathar\bbguild\model\games\game_api_interface
 	{
 		return $this->api;
 	}

@@ -12,7 +12,6 @@ namespace avathar\bbguild_wow\acp;
 
 use avathar\bbguild\model\admin\constants;
 use avathar\bbguild\model\player\guilds;
-use avathar\bbguild_wow\model\achievement;
 use avathar\bbguild\model\games\game;
 use avathar\bbguild\model\games\rpg\faction;
 
@@ -87,7 +86,6 @@ class achievement_module
 		$this->db=$db;
 		$this->phpbb_container = $phpbb_container;
 		$this->auth=$auth;
-
 
 		$form_key = 'avathar/bbguild_wow';
 		add_form_key($form_key);
@@ -207,7 +205,7 @@ class achievement_module
 	/**
 	 * List achievements
 	 *
-	 * @param \avathar\bbguild\model\player\guilds $Guild
+	 * @param guilds $Guild
 	 */
 	private function BuildTemplateListAchievements(guilds $Guild)
 	{
@@ -494,7 +492,7 @@ class achievement_module
 	/**
 	 * Batch delete selected achievements from the listing.
 	 *
-	 * @param \avathar\bbguild\model\player\guilds $Guild
+	 * @param guilds $Guild
 	 */
 	private function achievement_batch_delete(guilds $Guild)
 	{
@@ -537,7 +535,7 @@ class achievement_module
 	/**
 	 * Load guild achievements from Battle.net API.
 	 *
-	 * @param \avathar\bbguild\model\player\guilds $Guild
+	 * @param guilds $Guild
 	 */
 	private function LoadAPIGuildachievements(guilds $Guild)
 	{

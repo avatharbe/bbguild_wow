@@ -366,7 +366,7 @@ class wow_api implements game_api_interface
 						{
 							$avatar_url = $asset['value'];
 						}
-						elseif ($asset['key'] === 'main')
+						else if ($asset['key'] === 'main')
 						{
 							$render_url = $asset['value'];
 						}
@@ -763,11 +763,17 @@ class wow_api implements game_api_interface
 			if (!is_array($data) || isset($data['code']) || !isset($data['equipped_items']))
 			{
 				$error_code = isset($data['code']) ? (int) $data['code'] : $http_code;
-				if ($error_code === 0) $error_code = 'unknown';
+				if ($error_code === 0)
+				{
+					$error_code = 'unknown';
+				}
 				$errors[$error_code][] = $player['player_name'];
 				$failed++;
 
-				if ($http_code >= 500) break;
+				if ($http_code >= 500)
+				{
+					break;
+				}
 				continue;
 			}
 
@@ -781,7 +787,10 @@ class wow_api implements game_api_interface
 			foreach ($data['equipped_items'] as $item)
 			{
 				$slot_type = isset($item['slot']['type']) ? $item['slot']['type'] : '';
-				if (empty($slot_type)) continue;
+				if (empty($slot_type))
+				{
+					continue;
+				}
 
 				$icon_url = '';
 				if (isset($item['media']['id']))

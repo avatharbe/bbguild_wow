@@ -588,8 +588,8 @@ class achievement
 	 * - Guild achievements: GET /data/wow/guild/{realm}/{name}/achievements (profile namespace)
 	 * - Achievement detail: GET /data/wow/achievement/{id} (static namespace)
 	 *
-	 * @param \avathar\bbguild\model\player\guilds $Guild
-	 * @param \avathar\bbguild\model\games\game    $game
+	 * @param guilds $Guild
+	 * @param game    $game
 	 * @return array Result with 'success' (bool), 'message' (string), 'count' (int)
 	 */
 	public function setAchievements(guilds $Guild, game $game): array
@@ -963,7 +963,7 @@ class achievement
 			{
 				$this->factionId = 0;
 			}
-			elseif ($faction_type === 'HORDE')
+			else if ($faction_type === 'HORDE')
 			{
 				$this->factionId = 1;
 			}
@@ -1030,7 +1030,7 @@ class achievement
 			{
 				$factionId = 0;
 			}
-			elseif ($faction_type === 'HORDE')
+			else if ($faction_type === 'HORDE')
 			{
 				$factionId = 1;
 			}

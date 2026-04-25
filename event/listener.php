@@ -544,7 +544,10 @@ class listener implements EventSubscriberInterface
 					{
 						$upgrades = $run['keystone_upgrades'] ?? 0;
 						$stars = '';
-						for ($i = 0; $i < $upgrades; $i++) $stars .= '+';
+						for ($i = 0; $i < $upgrades; $i++)
+						{
+							$stars .= '+';
+						}
 
 						$duration_ms = $run['duration'] ?? 0;
 						$minutes = floor($duration_ms / 60000);
