@@ -114,6 +114,30 @@ class battlenet_character extends battlenet_resource
 	}
 
 	/**
+	 * Fetch character Mythic Keystone profile (M+ rating and best runs).
+	 *
+	 * @param string $realm_slug     Lowercase hyphenated realm slug
+	 * @param string $character_name Lowercase character name
+	 * @return array
+	 */
+	public function getCharacterMythicKeystoneProfile(string $realm_slug, string $character_name): array
+	{
+		return $this->consume($realm_slug . '/' . $this->normalize_name($character_name) . '/mythic-keystone-profile', array());
+	}
+
+	/**
+	 * Fetch character PvP summary (honor level, arena/RBG ratings).
+	 *
+	 * @param string $realm_slug     Lowercase hyphenated realm slug
+	 * @param string $character_name Lowercase character name
+	 * @return array
+	 */
+	public function getCharacterPvPSummary(string $realm_slug, string $character_name): array
+	{
+		return $this->consume($realm_slug . '/' . $this->normalize_name($character_name) . '/pvp-summary', array());
+	}
+
+	/**
 	 * Normalize a character name for the Battle.net API.
 	 *
 	 * The API expects lowercase names with proper Unicode handling.

@@ -66,5 +66,51 @@
 	</fieldset>
 	{% endif %}
 
+	{% if S_WOW_HAS_MPLUS %}
+	<fieldset>
+		<legend>{{ lang('WOW_MYTHIC_PLUS') }}</legend>
+		{% if WOW_MPLUS_RATING > 0 %}
+		<dl>
+			<dt>{{ lang('WOW_MPLUS_RATING') }}:</dt>
+			<dd><strong{% if WOW_MPLUS_COLOR %} style="color: {{ WOW_MPLUS_COLOR }}"{% endif %}>{{ WOW_MPLUS_RATING }}</strong></dd>
+		</dl>
+		{% endif %}
+		{% if wow_mplus_runs %}
+		<table class="wow-mplus-table">
+			<thead>
+				<tr>
+					<th>{{ lang('WOW_DUNGEON') }}</th>
+					<th>{{ lang('WOW_KEY_LEVEL') }}</th>
+					<th>{{ lang('WOW_TIME') }}</th>
+					<th></th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for run in wow_mplus_runs %}
+				<tr>
+					<td>{{ run.DUNGEON }}</td>
+					<td>+{{ run.LEVEL }}</td>
+					<td>{{ run.TIME }}</td>
+					<td>{% if run.S_TIMED %}<span class="wow-timed">{{ run.UPGRADES }}</span>{% endif %}</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+		{% endif %}
+	</fieldset>
+	{% endif %}
+
+	{% if S_WOW_HAS_PVP %}
+	<fieldset>
+		<legend>{{ lang('WOW_PVP') }}</legend>
+		{% if WOW_PVP_HONOR_LEVEL > 0 %}
+		<dl>
+			<dt>{{ lang('WOW_HONOR_LEVEL') }}:</dt>
+			<dd>{{ WOW_PVP_HONOR_LEVEL }}</dd>
+		</dl>
+		{% endif %}
+	</fieldset>
+	{% endif %}
+
 </div>
 {% endif %}

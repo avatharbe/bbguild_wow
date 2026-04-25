@@ -603,6 +603,72 @@ class wow_api implements game_api_interface
 	}
 
 	/**
+	 * Fetch character Mythic Keystone profile from the API.
+	 * Results are cached via the API layer (1h TTL).
+	 *
+	 * @param string $name    Character name
+	 * @param string $realm   Realm slug
+	 * @param string $region  Region code
+	 * @param string $edition Game edition
+	 * @return array|false Parsed M+ data or false on failure
+	 */
+	public function fetch_mythic_keystone_profile(string $name, string $realm, string $region, string $edition = 'retail')
+	{
+		global $phpbb_container;
+
+		$game = $this->get_game_from_db($phpbb_container);
+		if (!$game || trim($game->getApikey()) == '')
+		{
+			return false;
+		}
+
+		$ext_path = $this->get_ext_path($phpbb_container);
+		$api = new battlenet('character', $region, $game->getApikey(), $game->get_apilocale(), $game->get_privkey(), $ext_path, $this->cache, 3600, $edition);
+		$data = $api->character->getCharacterMythicKeystoneProfile($this->to_slug($realm), $name);
+		unset($api);
+
+		if (isset($data['response']) && !isset($data['response']['code']))
+		{
+			return $data['response'];
+		}
+
+		return false;
+	}
+
+	/**
+	 * Fetch character PvP summary from the API.
+	 * Results are cached via the API layer (1h TTL).
+	 *
+	 * @param string $name    Character name
+	 * @param string $realm   Realm slug
+	 * @param string $region  Region code
+	 * @param string $edition Game edition
+	 * @return array|false Parsed PvP data or false on failure
+	 */
+	public function fetch_pvp_summary(string $name, string $realm, string $region, string $edition = 'retail')
+	{
+		global $phpbb_container;
+
+		$game = $this->get_game_from_db($phpbb_container);
+		if (!$game || trim($game->getApikey()) == '')
+		{
+			return false;
+		}
+
+		$ext_path = $this->get_ext_path($phpbb_container);
+		$api = new battlenet('character', $region, $game->getApikey(), $game->get_apilocale(), $game->get_privkey(), $ext_path, $this->cache, 3600, $edition);
+		$data = $api->character->getCharacterPvPSummary($this->to_slug($realm), $name);
+		unset($api);
+
+		if (isset($data['response']) && !isset($data['response']['code']))
+		{
+			return $data['response'];
+		}
+
+		return false;
+	}
+
+	/**
 	 * Fetch character equipment from the Character Equipment API and cache in DB.
 	 *
 	 * Processes players whose equipment hasn't been synced recently (>24h),

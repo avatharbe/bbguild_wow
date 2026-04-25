@@ -519,13 +519,84 @@ class listener implements EventSubscriberInterface
 			));
 		}
 
+		// Mythic Keystone profile
+		$mplus_rating = 0;
+		$mplus_color = '';
+		$mplus_runs = array();
+		if ($player_row && $p_edition === 'retail')
+		{
+			$raw_mplus = $wow_api->fetch_mythic_keystone_profile($p_name, $p_realm, $p_region, $p_edition);
+			if ($raw_mplus)
+			{
+				if (isset($raw_mplus['current_mythic_rating']))
+				{
+					$rating = $raw_mplus['current_mythic_rating'];
+					$mplus_rating = round((float) ($rating['rating'] ?? 0));
+					if (isset($rating['color']))
+					{
+						$c = $rating['color'];
+						$mplus_color = sprintf('#%02x%02x%02x', $c['r'] ?? 0, $c['g'] ?? 0, $c['b'] ?? 0);
+					}
+				}
+				if (isset($raw_mplus['current_period']['best_runs']))
+				{
+					foreach ($raw_mplus['current_period']['best_runs'] as $run)
+					{
+						$upgrades = $run['keystone_upgrades'] ?? 0;
+						$stars = '';
+						for ($i = 0; $i < $upgrades; $i++) $stars .= '+';
+
+						$duration_ms = $run['duration'] ?? 0;
+						$minutes = floor($duration_ms / 60000);
+						$seconds = floor(($duration_ms % 60000) / 1000);
+
+						$this->template->assign_block_vars('wow_mplus_runs', array(
+							'DUNGEON'  => $run['dungeon']['name'] ?? '',
+							'LEVEL'    => (int) ($run['keystone_level'] ?? 0),
+							'TIME'     => sprintf('%d:%02d', $minutes, $seconds),
+							'UPGRADES' => $stars,
+							'S_TIMED'  => $upgrades > 0,
+						));
+						$mplus_runs[] = true;
+					}
+				}
+			}
+		}
+
+		// PvP summary
+		$pvp_data = array();
+		if ($player_row && $p_edition === 'retail')
+		{
+			$raw_pvp = $wow_api->fetch_pvp_summary($p_name, $p_realm, $p_region, $p_edition);
+			if ($raw_pvp)
+			{
+				if (isset($raw_pvp['honor_level']))
+				{
+					$pvp_data['honor_level'] = (int) $raw_pvp['honor_level'];
+				}
+				if (isset($raw_pvp['pvp_map_statistics']))
+				{
+					// Not always present — skip silently
+				}
+			}
+
+			// Try to get bracket ratings (2v2, 3v3, rbg) from the brackets endpoint
+			// The pvp-summary doesn't always include ratings; they're separate endpoints
+			// For now, just show honor level if available
+		}
+
 		$this->template->assign_vars(array(
-			'WOW_PLAYER_SPEC'      => $spec,
-			'WOW_AVG_ILVL'         => $avg_ilvl,
-			'S_WOW_PLAYER'         => true,
-			'S_WOW_HAS_EQUIPMENT'  => !empty($equipment),
-			'S_WOW_HAS_STATS'      => !empty($stats_data),
+			'WOW_PLAYER_SPEC'       => $spec,
+			'WOW_AVG_ILVL'          => $avg_ilvl,
+			'WOW_MPLUS_RATING'      => $mplus_rating,
+			'WOW_MPLUS_COLOR'       => $mplus_color,
+			'WOW_PVP_HONOR_LEVEL'   => $pvp_data['honor_level'] ?? 0,
+			'S_WOW_PLAYER'          => true,
+			'S_WOW_HAS_EQUIPMENT'   => !empty($equipment),
+			'S_WOW_HAS_STATS'       => !empty($stats_data),
 			'S_WOW_HAS_PROFESSIONS' => !empty($professions_data),
+			'S_WOW_HAS_MPLUS'       => $mplus_rating > 0 || !empty($mplus_runs),
+			'S_WOW_HAS_PVP'         => !empty($pvp_data),
 		));
 	}
 

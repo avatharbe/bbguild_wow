@@ -469,6 +469,33 @@ h3.category {
     padding: 2px 0;
 }
 
+/* M+ runs table */
+.wow-mplus-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9em;
+    margin-top: 8px;
+}
+
+.wow-mplus-table th {
+    text-align: left;
+    font-size: 0.85em;
+    opacity: 0.6;
+    text-transform: uppercase;
+    padding: 4px 8px 4px 0;
+    border-bottom: 1px solid rgba(128, 128, 128, 0.2);
+}
+
+.wow-mplus-table td {
+    padding: 4px 8px 4px 0;
+    border-bottom: 1px solid rgba(128, 128, 128, 0.1);
+}
+
+.wow-timed {
+    color: #1eff00;
+    font-weight: bold;
+}
+
 @media (max-width: 600px) {
     .wow-equipment-grid,
     .wow-stats-grid {

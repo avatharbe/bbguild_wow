@@ -100,4 +100,11 @@ $lang = array_merge(
 	'WOW_AVG_ILVL'             => 'Average Item Level',
 	'WOW_STATS'                => 'Character Stats',
 	'WOW_PROFESSIONS'          => 'Professions',
+	'WOW_MYTHIC_PLUS'          => 'Mythic+',
+	'WOW_MPLUS_RATING'         => 'M+ Rating',
+	'WOW_DUNGEON'              => 'Dungeon',
+	'WOW_KEY_LEVEL'            => 'Key',
+	'WOW_TIME'                 => 'Time',
+	'WOW_PVP'                  => 'PvP',
+	'WOW_HONOR_LEVEL'          => 'Honor Level',
 ));
