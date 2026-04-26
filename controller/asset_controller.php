@@ -6,12 +6,12 @@
  * which is protected by a deny-all .htaccess. This controller reads
  * files from disk and streams them via BinaryFileResponse.
  *
- * @package   avathar\bbguild_wow
+ * @package   avathar\bbguildwow
  * @copyright 2026 avathar.be
  * @license   http://opensource.org/licenses/gpl-2.0.php GNU General Public License v2
  */
 
-namespace avathar\bbguild_wow\controller;
+namespace avathar\bbguildwow\controller;
 
 use phpbb\db\driver\driver_interface;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -60,7 +60,7 @@ class asset_controller
 		$emblemurl = $this->db->sql_fetchfield('emblemurl');
 		$this->db->sql_freeresult($result);
 
-		if (empty($emblemurl) || strpos($emblemurl, 'bbguild_wow/emblems/') === false)
+		if (empty($emblemurl) || strpos($emblemurl, 'bbguildwow/emblems/') === false)
 		{
 			return new Response('Not found', 404);
 		}
@@ -83,7 +83,7 @@ class asset_controller
 		$portrait_url = $this->db->sql_fetchfield('player_portrait_url');
 		$this->db->sql_freeresult($result);
 
-		if (empty($portrait_url) || strpos($portrait_url, 'bbguild_wow/portraits/') === false)
+		if (empty($portrait_url) || strpos($portrait_url, 'bbguildwow/portraits/') === false)
 		{
 			return new Response('Not found', 404);
 		}
@@ -98,7 +98,7 @@ class asset_controller
 	/**
 	 * Read a file from disk and return a BinaryFileResponse.
 	 *
-	 * @param string $relative_path Path relative to phpBB root (e.g. files/bbguild_wow/emblems/foo.png)
+	 * @param string $relative_path Path relative to phpBB root (e.g. files/bbguildwow/emblems/foo.png)
 	 * @param string $content_type  MIME type
 	 * @return Response
 	 */
@@ -106,9 +106,9 @@ class asset_controller
 	{
 		$absolute_path = $this->root_path . $relative_path;
 
-		// Path traversal guard: resolved path must stay under files/bbguild_wow/
+		// Path traversal guard: resolved path must stay under files/bbguildwow/
 		$real_path = realpath($absolute_path);
-		$allowed_base = realpath($this->root_path . 'files/bbguild_wow');
+		$allowed_base = realpath($this->root_path . 'files/bbguildwow');
 
 		if ($real_path === false || $allowed_base === false || strpos($real_path, $allowed_base) !== 0)
 		{

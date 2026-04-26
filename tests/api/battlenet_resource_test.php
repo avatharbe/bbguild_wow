@@ -5,7 +5,7 @@
  * @license GNU General Public License, version 2 (GPL-2.0)
  */
 
-namespace avathar\bbguild_wow\tests\api;
+namespace avathar\bbguildwow\tests\api;
 
 use PHPUnit\Framework\TestCase;
 
@@ -13,7 +13,7 @@ use PHPUnit\Framework\TestCase;
  * Concrete subclass of the abstract battlenet_resource for testing.
  * Sets methods_allowed to ['*'] so consume() won't reject any method.
  */
-class battlenet_resource_test_wrapper extends \avathar\bbguild_wow\api\battlenet_resource
+class battlenet_resource_test_wrapper extends \avathar\bbguildwow\api\battlenet_resource
 {
 	protected $methods_allowed = array('*');
 	protected $endpoint = 'test/endpoint';
@@ -118,7 +118,7 @@ class battlenet_resource_test extends TestCase
 	public function test_oauth_token_returns_cached_token(): void
 	{
 		$this->cache->method('get')
-			->with('bbguild_wow_oauth_token_eu')
+			->with('bbguildwow_oauth_token_eu')
 			->willReturn('cached_token_abc');
 
 		$resource = new battlenet_resource_test_wrapper($this->cache, 'eu');
@@ -143,7 +143,7 @@ class battlenet_resource_test extends TestCase
 
 	public function test_edition_infixes_keys(): void
 	{
-		$infixes = \avathar\bbguild_wow\api\battlenet_resource::EDITION_INFIXES;
+		$infixes = \avathar\bbguildwow\api\battlenet_resource::EDITION_INFIXES;
 		$this->assertArrayHasKey('retail', $infixes);
 		$this->assertArrayHasKey('classic_era', $infixes);
 		$this->assertArrayHasKey('classic_prog', $infixes);

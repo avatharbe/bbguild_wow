@@ -5,10 +5,10 @@
  * @license GNU General Public License, version 2 (GPL-2.0)
  */
 
-namespace avathar\bbguild_wow\tests\game;
+namespace avathar\bbguildwow\tests\game;
 
 use PHPUnit\Framework\TestCase;
-use avathar\bbguild_wow\game\wow_provider;
+use avathar\bbguildwow\game\wow_provider;
 
 class wow_provider_test extends TestCase
 {
@@ -25,18 +25,18 @@ class wow_provider_test extends TestCase
 	{
 		parent::setUp();
 
-		$this->installer = $this->getMockBuilder(\avathar\bbguild_wow\game\wow_installer::class)
+		$this->installer = $this->getMockBuilder(\avathar\bbguildwow\game\wow_installer::class)
 			->disableOriginalConstructor()
 			->getMock();
 
-		$this->api = $this->getMockBuilder(\avathar\bbguild_wow\game\wow_api::class)
+		$this->api = $this->getMockBuilder(\avathar\bbguildwow\game\wow_api::class)
 			->disableOriginalConstructor()
 			->getMock();
 
 		$ext_manager = $this->createMock(\phpbb\extension\manager::class);
 		$ext_manager->method('get_extension_path')
-			->with('avathar/bbguild_wow', true)
-			->willReturn('/ext/avathar/bbguild_wow/');
+			->with('avathar/bbguildwow', true)
+			->willReturn('/ext/avathar/bbguildwow/');
 
 		$this->provider = new wow_provider($this->installer, $this->api, $ext_manager);
 	}
@@ -80,7 +80,7 @@ class wow_provider_test extends TestCase
 
 	public function test_get_images_path(): void
 	{
-		$this->assertSame('/ext/avathar/bbguild_wow/images/', $this->provider->get_images_path());
+		$this->assertSame('/ext/avathar/bbguildwow/images/', $this->provider->get_images_path());
 	}
 
 	public function test_get_regions(): void

@@ -5,19 +5,19 @@
  * Provides a dashboard for managing Battle.net OAuth 2.0 credentials,
  * testing the API connection, and managing the token cache.
  *
- * @package   bbguild_wow v2.0
+ * @package   bbguildwow v2.0
  * @copyright 2018 avathar.be
  * @license   http://opensource.org/licenses/gpl-2.0.php GNU General Public License v2
  */
 
-namespace avathar\bbguild_wow\acp;
+namespace avathar\bbguildwow\acp;
 
 use avathar\bbguild\model\games\game;
 
 /**
  * Class battlenet_module
  *
- * @package avathar\bbguild_wow\acp
+ * @package avathar\bbguildwow\acp
  */
 class battlenet_module
 {
@@ -38,7 +38,7 @@ class battlenet_module
 	{
 		global $user, $db, $template, $request, $phpbb_container, $auth;
 
-		$form_key = 'avathar/bbguild_wow_battlenet';
+		$form_key = 'avathar/bbguildwow_battlenet';
 		add_form_key($form_key);
 
 		$this->tpl_name = 'acp_battlenet';
@@ -85,7 +85,7 @@ class battlenet_module
 				$regions = array('us', 'eu', 'kr', 'tw');
 				foreach ($regions as $region)
 				{
-					$cache->destroy('bbguild_wow_oauth_token_' . $region);
+					$cache->destroy('bbguildwow_oauth_token_' . $region);
 				}
 				trigger_error($user->lang['WOW_BNET_CACHE_CLEARED'] . adm_back_link($this->u_action));
 			}
@@ -121,7 +121,7 @@ class battlenet_module
 		$regions = array('us', 'eu', 'kr', 'tw');
 		foreach ($regions as $region)
 		{
-			$cached_token = $cache->get('bbguild_wow_oauth_token_' . $region);
+			$cached_token = $cache->get('bbguildwow_oauth_token_' . $region);
 			$template->assign_block_vars('region_row', array(
 				'REGION'     => strtoupper($region),
 				'REGION_KEY' => $region,
@@ -247,7 +247,7 @@ class battlenet_module
 		// Cache the token so it appears in the Token Cache table
 		global $phpbb_container;
 		$cache = $phpbb_container->get('cache');
-		$cache->put('bbguild_wow_oauth_token_' . $region, $data['access_token'], $expires_in);
+		$cache->put('bbguildwow_oauth_token_' . $region, $data['access_token'], $expires_in);
 
 		return array(
 			'success' => true,

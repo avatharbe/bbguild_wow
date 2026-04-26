@@ -15,7 +15,7 @@ bbGuild uses a **tagged service** pattern to discover game plugins. Each game is
 │  │  (tagged_iterator)        │   │
 │  │                           │   │
 │  │  ┌─────────────────────┐  │   │
-│  │  │ wow_provider        │◄─┼───┼── avathar/bbguild_wow
+│  │  │ wow_provider        │◄─┼───┼── avathar/bbguildwow
 │  │  │ tag: bbguild.game   │  │   │
 │  │  └─────────────────────┘  │   │
 │  │  ┌─────────────────────┐  │   │
@@ -112,7 +112,7 @@ interface game_api_interface
 ## WoW Plugin Structure
 
 ```
-ext/avathar/bbguild_wow/
+ext/avathar/bbguildwow/
 ├── composer.json                    # Package metadata
 ├── ext.php                          # Checks bbGuild core is enabled
 ├── config/
@@ -138,19 +138,19 @@ ext/avathar/bbguild_wow/
 
 ```yaml
 services:
-    avathar.bbguild_wow.installer:
-        class: avathar\bbguild_wow\game\wow_installer
+    avathar.bbguildwow.installer:
+        class: avathar\bbguildwow\game\wow_installer
 
-    avathar.bbguild_wow.api:
-        class: avathar\bbguild_wow\game\wow_api
+    avathar.bbguildwow.api:
+        class: avathar\bbguildwow\game\wow_api
         arguments:
             - '@cache'
 
-    avathar.bbguild_wow.provider:
-        class: avathar\bbguild_wow\game\wow_provider
+    avathar.bbguildwow.provider:
+        class: avathar\bbguildwow\game\wow_provider
         arguments:
-            - '@avathar.bbguild_wow.installer'
-            - '@avathar.bbguild_wow.api'
+            - '@avathar.bbguildwow.installer'
+            - '@avathar.bbguildwow.api'
             - '@ext.manager'
         tags:
             - { name: bbguild.game_provider }
@@ -173,8 +173,8 @@ Core receives a request (e.g. install game, fetch guild data)
 ```
 
 This means:
-- If `bbguild_wow` is enabled → WoW operations go through the plugin
-- If `bbguild_wow` is disabled → WoW operations use the old hardcoded installer (if still present)
+- If `bbguildwow` is enabled → WoW operations go through the plugin
+- If `bbguildwow` is disabled → WoW operations use the old hardcoded installer (if still present)
 - Once all games are extracted and old code is removed (Phase 5), only the plugin path will exist
 
 ## Creating a New Game Plugin

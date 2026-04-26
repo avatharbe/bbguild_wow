@@ -5,14 +5,14 @@
  * Processes a batch of character portrait fetches per request.
  * Designed to be called repeatedly by JS until all portraits are synced.
  *
- * @package   avathar\bbguild_wow
+ * @package   avathar\bbguildwow
  * @copyright 2026 avathar.be
  * @license   http://opensource.org/licenses/gpl-2.0.php GNU General Public License v2
  */
 
-namespace avathar\bbguild_wow\controller;
+namespace avathar\bbguildwow\controller;
 
-use avathar\bbguild_wow\game\wow_api;
+use avathar\bbguildwow\game\wow_api;
 use avathar\bbguild\model\admin\log;
 use phpbb\db\driver\driver_interface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -417,7 +417,7 @@ class portrait_controller
 		$region = (!empty($guild_row['region'])) ? $guild_row['region'] : $game_row['region'];
 		$edition = (!empty($guild_row['game_edition'])) ? $guild_row['game_edition'] : 'retail';
 
-		$equipment_table = $phpbb_container->getParameter('avathar.bbguild_wow.tables.bb_player_equipment');
+		$equipment_table = $phpbb_container->getParameter('avathar.bbguildwow.tables.bb_player_equipment');
 		$stale_threshold = time() - 86400;
 
 		// Count total and remaining

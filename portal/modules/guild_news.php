@@ -5,12 +5,12 @@
  * Displays the guild's recent activity feed including item loots
  * and achievement completions from the Battle.net API.
  *
- * @package   avathar\bbguild_wow
+ * @package   avathar\bbguildwow
  * @copyright 2018 avathar.be
  * @license   http://opensource.org/licenses/gpl-2.0.php GNU General Public License v2
  */
 
-namespace avathar\bbguild_wow\portal\modules;
+namespace avathar\bbguildwow\portal\modules;
 
 use avathar\bbguild\portal\modules\module_base;
 use phpbb\db\driver\driver_interface;
@@ -21,7 +21,7 @@ class guild_news extends module_base
 	protected int $columns = 21; // top + center + bottom
 	protected string $name = 'BBGUILD_PORTAL_GUILD_NEWS';
 	protected string $image_src = '';
-	protected $language = array('vendor' => 'avathar/bbguild_wow', 'file' => 'wow');
+	protected $language = array('vendor' => 'avathar/bbguildwow', 'file' => 'wow');
 
 	/** @var driver_interface */
 	protected driver_interface $db;
@@ -97,6 +97,6 @@ class guild_news extends module_base
 			return null;
 		}
 
-		return '@avathar_bbguild_wow/portal/modules/guild_news_center.html';
+		return '@avathar_bbguildwow/portal/modules/guild_news_center.html';
 	}
 }

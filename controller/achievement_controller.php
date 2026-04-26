@@ -7,14 +7,14 @@
  * - achievement_list: achievements in a category
  * - achievement_detail: single achievement with criteria
  *
- * @package   avathar\bbguild_wow
+ * @package   avathar\bbguildwow
  * @copyright 2026 avathar.be
  * @license   http://opensource.org/licenses/gpl-2.0.php GNU General Public License v2
  */
 
-namespace avathar\bbguild_wow\controller;
+namespace avathar\bbguildwow\controller;
 
-use avathar\bbguild_wow\model\achievement;
+use avathar\bbguildwow\model\achievement;
 use phpbb\db\driver\driver_interface;
 use phpbb\request\request;
 use Symfony\Component\HttpFoundation\JsonResponse;

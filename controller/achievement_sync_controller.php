@@ -6,14 +6,14 @@
  * guild achievements from the Battle.net API. Called repeatedly
  * by JS until all data is fetched (batch pattern).
  *
- * @package   avathar\bbguild_wow
+ * @package   avathar\bbguildwow
  * @copyright 2026 avathar.be
  * @license   http://opensource.org/licenses/gpl-2.0.php GNU General Public License v2
  */
 
-namespace avathar\bbguild_wow\controller;
+namespace avathar\bbguildwow\controller;
 
-use avathar\bbguild_wow\model\achievement;
+use avathar\bbguildwow\model\achievement;
 use avathar\bbguild\model\admin\log;
 use avathar\bbguild\model\games\game;
 use avathar\bbguild\model\player\guilds;

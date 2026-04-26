@@ -4,19 +4,19 @@
  *
  * Registers World of Warcraft as a game plugin with bbGuild core.
  *
- * @package   bbguild_wow v2.0
+ * @package   bbguildwow v2.0
  * @copyright 2018 avathar.be
  * @license   http://opensource.org/licenses/gpl-2.0.php GNU General Public License v2
  */
 
-namespace avathar\bbguild_wow\game;
+namespace avathar\bbguildwow\game;
 
 use avathar\bbguild\model\games\game_provider_interface;
 
 /**
  * Class wow_provider
  *
- * @package avathar\bbguild_wow\game
+ * @package avathar\bbguildwow\game
  */
 class wow_provider implements game_provider_interface
 {
@@ -86,7 +86,7 @@ class wow_provider implements game_provider_interface
 	 */
 	public function get_images_path(): string
 	{
-		return $this->ext_manager->get_extension_path('avathar/bbguild_wow', true) . 'images/';
+		return $this->ext_manager->get_extension_path('avathar/bbguildwow', true) . 'images/';
 	}
 
 	/**

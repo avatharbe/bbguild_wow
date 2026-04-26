@@ -6,18 +6,18 @@
  * - Achievement Category Index: GET /data/wow/achievement-category/index
  * - Achievement Category Detail: GET /data/wow/achievement-category/{id}
  *
- * @package   bbguild_wow v2.0
+ * @package   bbguildwow v2.0
  * @license   http://opensource.org/licenses/gpl-2.0.php GNU General Public License v2
  * @author    Andreas Vandenberghe <sajaki@avathar.be>
  * @link      https://develop.battle.net/
  */
 
-namespace avathar\bbguild_wow\api;
+namespace avathar\bbguildwow\api;
 
 /**
  * Achievement Category resource (Game Data API, static namespace).
  *
- * @package avathar\bbguild_wow\api
+ * @package avathar\bbguildwow\api
  */
 class battlenet_achievement_category extends battlenet_resource
 {

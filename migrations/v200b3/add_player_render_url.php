@@ -4,19 +4,19 @@
  *
  * Stores the full-body character render from the Battle.net Character Media API.
  *
- * @package   avathar\bbguild_wow
+ * @package   avathar\bbguildwow
  * @copyright 2026 avathar.be
  * @license   http://opensource.org/licenses/gpl-2.0.php GNU General Public License v2
  */
 
-namespace avathar\bbguild_wow\migrations\v200b3;
+namespace avathar\bbguildwow\migrations\v200b3;
 
 class add_player_render_url extends \phpbb\db\migration\migration
 {
 	public static function depends_on()
 	{
 		return [
-			'\avathar\bbguild_wow\migrations\v200b3\add_player_equipment',
+			'\avathar\bbguildwow\migrations\v200b3\add_player_equipment',
 		];
 	}
 

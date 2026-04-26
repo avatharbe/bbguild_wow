@@ -5,14 +5,14 @@
  * @license GNU General Public License, version 2 (GPL-2.0)
  */
 
-namespace avathar\bbguild_wow\tests\api;
+namespace avathar\bbguildwow\tests\api;
 
 use PHPUnit\Framework\TestCase;
 
 /**
  * Test subclass that captures consume() calls instead of making HTTP requests.
  */
-class battlenet_character_test_wrapper extends \avathar\bbguild_wow\api\battlenet_character
+class battlenet_character_test_wrapper extends \avathar\bbguildwow\api\battlenet_character
 {
 	/** @var string Last method passed to consume() */
 	public $last_method = '';

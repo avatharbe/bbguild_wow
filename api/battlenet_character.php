@@ -5,7 +5,7 @@
  * Uses the Profile API endpoint:
  * - Character profile: GET /profile/wow/character/{realmSlug}/{characterName}
  *
- * @package   bbguild_wow v2.0
+ * @package   bbguildwow v2.0
  * @license   http://opensource.org/licenses/gpl-2.0.php GNU General Public License v2
  * @author    Andreas Vandenberghe <sajaki@avathar.be>
  * @author    Chris Saylor
@@ -14,12 +14,12 @@
  * @link      https://develop.battle.net/
  */
 
-namespace avathar\bbguild_wow\api;
+namespace avathar\bbguildwow\api;
 
 /**
  * Character resource.
  *
- * @package avathar\bbguild_wow\api
+ * @package avathar\bbguildwow\api
  */
 class battlenet_character extends battlenet_resource
 {

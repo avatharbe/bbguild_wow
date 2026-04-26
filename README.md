@@ -3,7 +3,7 @@
 
 Game plugin that adds World of Warcraft support to [bbGuild](https://github.com/avatharbe/bbguild).
 
-[![Tests](https://github.com/avatharbe/bbguild_wow/actions/workflows/tests.yml/badge.svg)](https://github.com/avatharbe/bbguild_wow/actions/workflows/tests.yml)
+[![Tests](https://github.com/avatharbe/bbguildwow/actions/workflows/tests.yml/badge.svg)](https://github.com/avatharbe/bbguildwow/actions/workflows/tests.yml)
 
 ## Features
 
@@ -26,8 +26,8 @@ Game plugin that adds World of Warcraft support to [bbGuild](https://github.com/
 ## Installation
 
 1. Ensure bbGuild core (`avathar/bbguild`) is installed and enabled.
-2. Download the latest release of `bbguild_wow`.
-3. Copy the `bbguild_wow` folder to `/ext/avathar/bbguild_wow/`.
+2. Download the latest release of `bbguildwow`.
+3. Copy the `bbguildwow` folder to `/ext/avathar/bbguildwow/`.
 4. Navigate in the ACP to `Customise -> Manage extensions`.
 5. Look for `bbGuild - World of Warcraft` under Disabled Extensions and click `Enable`.
 6. Go to ACP > bbGuild > Games and install the **World of Warcraft** game.
@@ -38,7 +38,7 @@ See [docs/INSTALL.md](docs/INSTALL.md) for detailed setup instructions including
 
 1. Navigate in the ACP to `Customise -> Extension Management -> Extensions`.
 2. Find `bbGuild - World of Warcraft` under Enabled Extensions and click `Disable`.
-3. To permanently uninstall, click `Delete Data` and then delete the `/ext/avathar/bbguild_wow` folder.
+3. To permanently uninstall, click `Delete Data` and then delete the `/ext/avathar/bbguildwow` folder.
 
 **Note:** Disabling the extension does not delete existing guild or player data from the database. Your roster and player records remain intact in bbGuild core. Only the WoW installer, API integration, and game-specific images become unavailable.
 
@@ -74,4 +74,4 @@ This extension serves as the reference implementation for bbGuild game plugins. 
 
 - [bbGuild Core](https://github.com/avatharbe/bbguild)
 - [Support Forum](https://www.avathar.be/forum)
-- [Issue Tracker](https://github.com/avatharbe/bbguild_wow/issues)
+- [Issue Tracker](https://github.com/avatharbe/bbguildwow/issues)

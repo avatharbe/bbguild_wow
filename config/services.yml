@@ -2,125 +2,125 @@ imports:
     - { resource: tables.yml }
 
 services:
-    avathar.bbguild_wow.installer:
-        class: avathar\bbguild_wow\game\wow_installer
+    avathar.bbguildwow.installer:
+        class: avathar\bbguildwow\game\wow_installer
         arguments:
             - '@dbal.conn'
             - '@cache.driver'
             - '@config'
             - '@user'
 
-    avathar.bbguild_wow.api:
-        class: avathar\bbguild_wow\game\wow_api
+    avathar.bbguildwow.api:
+        class: avathar\bbguildwow\game\wow_api
         arguments:
             - '@cache'
             - '@dbal.conn'
-            - '%avathar.bbguild_wow.tables.bb_guild_wow%'
+            - '%avathar.bbguildwow.tables.bb_guild_wow%'
             - '%avathar.bbguild.tables.bb_players%'
             - '%avathar.bbguild.tables.bb_ranks%'
 
-    avathar.bbguild_wow.provider:
-        class: avathar\bbguild_wow\game\wow_provider
+    avathar.bbguildwow.provider:
+        class: avathar\bbguildwow\game\wow_provider
         arguments:
-            - '@avathar.bbguild_wow.installer'
-            - '@avathar.bbguild_wow.api'
+            - '@avathar.bbguildwow.installer'
+            - '@avathar.bbguildwow.api'
             - '@ext.manager'
         tags:
             - { name: bbguild.game_provider }
 
-    avathar.bbguild_wow.listener:
-        class: avathar\bbguild_wow\event\listener
+    avathar.bbguildwow.listener:
+        class: avathar\bbguildwow\event\listener
         arguments:
             - '@config'
             - '@template'
             - '@dbal.conn'
             - '@request'
             - '@controller.helper'
-            - '%avathar.bbguild_wow.tables.bb_guild_wow%'
+            - '%avathar.bbguildwow.tables.bb_guild_wow%'
             - '%avathar.bbguild.tables.bb_players%'
         tags:
             - { name: event.listener }
 
-    avathar.bbguild_wow.asset_controller:
-        class: avathar\bbguild_wow\controller\asset_controller
+    avathar.bbguildwow.asset_controller:
+        class: avathar\bbguildwow\controller\asset_controller
         arguments:
             - '@dbal.conn'
             - '%core.root_path%'
             - '%avathar.bbguild.tables.bb_guild%'
             - '%avathar.bbguild.tables.bb_players%'
 
-    avathar.bbguild_wow.portrait_controller:
-        class: avathar\bbguild_wow\controller\portrait_controller
+    avathar.bbguildwow.portrait_controller:
+        class: avathar\bbguildwow\controller\portrait_controller
         arguments:
-            - '@avathar.bbguild_wow.api'
+            - '@avathar.bbguildwow.api'
             - '@dbal.conn'
             - '@avathar.bbguild.log'
             - '%avathar.bbguild.tables.bb_players%'
             - '%avathar.bbguild.tables.bb_guild%'
             - '%avathar.bbguild.tables.bb_games%'
 
-    avathar.bbguild_wow.achievement:
-        class: avathar\bbguild_wow\model\achievement
+    avathar.bbguildwow.achievement:
+        class: avathar\bbguildwow\model\achievement
         arguments:
             - '@dbal.conn'
             - '@cache'
             - '@avathar.bbguild.util'
-            - '%avathar.bbguild_wow.tables.bb_achievement_track%'
-            - '%avathar.bbguild_wow.tables.bb_achievement%'
-            - '%avathar.bbguild_wow.tables.bb_achievement_rewards%'
-            - '%avathar.bbguild_wow.tables.bb_criteria_track%'
-            - '%avathar.bbguild_wow.tables.bb_achievement_criteria%'
-            - '%avathar.bbguild_wow.tables.bb_relations_table%'
-            - '%avathar.bbguild_wow.tables.bb_guild_wow%'
-            - '%avathar.bbguild_wow.tables.bb_achievement_category%'
+            - '%avathar.bbguildwow.tables.bb_achievement_track%'
+            - '%avathar.bbguildwow.tables.bb_achievement%'
+            - '%avathar.bbguildwow.tables.bb_achievement_rewards%'
+            - '%avathar.bbguildwow.tables.bb_criteria_track%'
+            - '%avathar.bbguildwow.tables.bb_achievement_criteria%'
+            - '%avathar.bbguildwow.tables.bb_relations_table%'
+            - '%avathar.bbguildwow.tables.bb_guild_wow%'
+            - '%avathar.bbguildwow.tables.bb_achievement_category%'
 
     # --- Controllers ---
 
-    avathar.bbguild_wow.achievement_sync_controller:
-        class: avathar\bbguild_wow\controller\achievement_sync_controller
+    avathar.bbguildwow.achievement_sync_controller:
+        class: avathar\bbguildwow\controller\achievement_sync_controller
         arguments:
-            - '@avathar.bbguild_wow.achievement'
+            - '@avathar.bbguildwow.achievement'
             - '@dbal.conn'
             - '@avathar.bbguild.log'
             - '%avathar.bbguild.tables.bb_guild%'
             - '%avathar.bbguild.tables.bb_games%'
-            - '%avathar.bbguild_wow.tables.bb_achievement%'
+            - '%avathar.bbguildwow.tables.bb_achievement%'
 
-    avathar.bbguild_wow.achievement_controller:
-        class: avathar\bbguild_wow\controller\achievement_controller
+    avathar.bbguildwow.achievement_controller:
+        class: avathar\bbguildwow\controller\achievement_controller
         arguments:
-            - '@avathar.bbguild_wow.achievement'
+            - '@avathar.bbguildwow.achievement'
             - '@dbal.conn'
             - '@request'
-            - '%avathar.bbguild_wow.tables.bb_achievement%'
-            - '%avathar.bbguild_wow.tables.bb_achievement_track%'
-            - '%avathar.bbguild_wow.tables.bb_achievement_category%'
-            - '%avathar.bbguild_wow.tables.bb_relations_table%'
-            - '%avathar.bbguild_wow.tables.bb_achievement_criteria%'
-            - '%avathar.bbguild_wow.tables.bb_criteria_track%'
+            - '%avathar.bbguildwow.tables.bb_achievement%'
+            - '%avathar.bbguildwow.tables.bb_achievement_track%'
+            - '%avathar.bbguildwow.tables.bb_achievement_category%'
+            - '%avathar.bbguildwow.tables.bb_relations_table%'
+            - '%avathar.bbguildwow.tables.bb_achievement_criteria%'
+            - '%avathar.bbguildwow.tables.bb_criteria_track%'
 
     # --- Portal modules ---
 
-    avathar.bbguild_wow.portal.module.achievements:
-        class: avathar\bbguild_wow\portal\modules\achievements
+    avathar.bbguildwow.portal.module.achievements:
+        class: avathar\bbguildwow\portal\modules\achievements
         arguments:
             - '@config'
             - '@dbal.conn'
             - '@template'
             - '@controller.helper'
-            - '%avathar.bbguild_wow.tables.bb_achievement%'
-            - '%avathar.bbguild_wow.tables.bb_achievement_track%'
-            - '%avathar.bbguild_wow.tables.bb_guild_wow%'
-            - '@avathar.bbguild_wow.achievement'
+            - '%avathar.bbguildwow.tables.bb_achievement%'
+            - '%avathar.bbguildwow.tables.bb_achievement_track%'
+            - '%avathar.bbguildwow.tables.bb_guild_wow%'
+            - '@avathar.bbguildwow.achievement'
         tags:
             - { name: bbguild.portal.module }
 
-    avathar.bbguild_wow.portal.module.guild_news:
-        class: avathar\bbguild_wow\portal\modules\guild_news
+    avathar.bbguildwow.portal.module.guild_news:
+        class: avathar\bbguildwow\portal\modules\guild_news
         arguments:
             - '@dbal.conn'
             - '@template'
             - '%avathar.bbguild.tables.bb_news%'
-            - '%avathar.bbguild_wow.tables.bb_guild_wow%'
+            - '%avathar.bbguildwow.tables.bb_guild_wow%'
         tags:
             - { name: bbguild.portal.module }

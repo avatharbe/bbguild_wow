@@ -2,7 +2,7 @@
 /**
  * Battle.net WoW API PHP SDK
  *
- * @package   bbguild_wow v2.0
+ * @package   bbguildwow v2.0
  * @license   http://opensource.org/licenses/gpl-2.0.php GNU General Public License v2
  * @author    Andreas Vandenberghe <sajaki@avathar.be>
  * @author    Chris Saylor
@@ -11,14 +11,14 @@
  * @link      https://develop.battle.net/
  */
 
-namespace avathar\bbguild_wow\api;
+namespace avathar\bbguildwow\api;
 
 /**
  * Resource skeleton
  *
  * Uses OAuth 2.0 Client Credentials Grant for authentication.
  *
- * @package avathar\bbguild_wow\api
+ * @package avathar\bbguildwow\api
  */
 abstract class battlenet_resource
 {
@@ -121,14 +121,14 @@ abstract class battlenet_resource
 	/**
 	 * Fetch an OAuth 2.0 access token using Client Credentials Grant.
 	 *
-	 * Caches the token using phpBB cache with key bbguild_wow_oauth_token_{region}.
+	 * Caches the token using phpBB cache with key bbguildwow_oauth_token_{region}.
 	 *
 	 * @param bool $force_refresh Force a new token even if cached
 	 * @return string|false Access token or false on failure
 	 */
 	protected function fetch_oauth_token($force_refresh = false)
 	{
-		$cache_key = 'bbguild_wow_oauth_token_' . $this->region;
+		$cache_key = 'bbguildwow_oauth_token_' . $this->region;
 
 		if (!$force_refresh)
 		{
@@ -262,7 +262,7 @@ abstract class battlenet_resource
 			}
 		}
 
-		$cachesignature = 'bbguild_wow_api_' . base64_encode($requestUri);
+		$cachesignature = 'bbguildwow_api_' . base64_encode($requestUri);
 
 		if (!$data = $this->_getCachedResult($cachesignature))
 		{

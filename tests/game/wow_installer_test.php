@@ -5,10 +5,10 @@
  * @license GNU General Public License, version 2 (GPL-2.0)
  */
 
-namespace avathar\bbguild_wow\tests\game;
+namespace avathar\bbguildwow\tests\game;
 
 use PHPUnit\Framework\TestCase;
-use avathar\bbguild_wow\game\wow_installer;
+use avathar\bbguildwow\game\wow_installer;
 
 class wow_installer_test extends TestCase
 {

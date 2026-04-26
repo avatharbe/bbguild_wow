@@ -1,8 +1,8 @@
 <?php
 /**
- * bbguild_wow ACP language file for Battle.net API (EN)
+ * bbguildwow ACP language file for Battle.net API (EN)
  *
- * @package   phpBB Extension - bbguild_wow
+ * @package   phpBB Extension - bbguildwow
  * @copyright 2018 avathar.be
  * @license   http://opensource.org/licenses/gpl-2.0.php GNU General Public License v2
  */

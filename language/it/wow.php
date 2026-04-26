@@ -1,8 +1,8 @@
 <?php
 /**
- * bbguild_wow language file [Italian]
+ * bbguildwow language file [Italian]
  *
- * @package   phpBB Extension - bbguild_wow
+ * @package   phpBB Extension - bbguildwow
  * @copyright 2009 bbguild
  * @license   http://opensource.org/licenses/gpl-2.0.php GNU General Public License v2
  */

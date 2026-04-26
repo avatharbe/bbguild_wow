@@ -5,10 +5,10 @@
  * @license GNU General Public License, version 2 (GPL-2.0)
  */
 
-namespace avathar\bbguild_wow\tests\game;
+namespace avathar\bbguildwow\tests\game;
 
 use PHPUnit\Framework\TestCase;
-use avathar\bbguild_wow\game\wow_api;
+use avathar\bbguildwow\game\wow_api;
 
 class wow_api_test extends TestCase
 {

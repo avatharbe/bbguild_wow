@@ -5,30 +5,30 @@
  * Implements game_api_interface by wrapping the Battle.net API classes.
  * Updated for the new Game Data / Profile API (2024+).
  *
- * @package   bbguild_wow v2.0
+ * @package   bbguildwow v2.0
  * @copyright 2018 avathar.be
  * @license   http://opensource.org/licenses/gpl-2.0.php GNU General Public License v2
  */
 
-namespace avathar\bbguild_wow\game;
+namespace avathar\bbguildwow\game;
 
 use avathar\bbguild\model\games\game_api_interface;
-use avathar\bbguild_wow\api\battlenet;
+use avathar\bbguildwow\api\battlenet;
 
 /**
  * Class wow_api
  *
  * Adapts the Battle.net SDK to the bbGuild game_api_interface.
  *
- * @package avathar\bbguild_wow\game
+ * @package avathar\bbguildwow\game
  */
 class wow_api implements game_api_interface
 {
 	/** Cache key for class ID→name map */
-	const CACHE_KEY_CLASSES = 'bbguild_wow_playable_classes';
+	const CACHE_KEY_CLASSES = 'bbguildwow_playable_classes';
 
 	/** Cache key for race ID→name map */
-	const CACHE_KEY_RACES = 'bbguild_wow_playable_races';
+	const CACHE_KEY_RACES = 'bbguildwow_playable_races';
 
 	/** Cache TTL for static data: 7 days */
 	const STATIC_CACHE_TTL = 604800;
@@ -274,7 +274,7 @@ class wow_api implements game_api_interface
 
 		// Use phpBB's configured upload path (default: 'files')
 		$upload_path = $phpbb_container->get('config')['upload_path'];
-		$portrait_rel = $upload_path . '/bbguild_wow/portraits/';
+		$portrait_rel = $upload_path . '/bbguildwow/portraits/';
 		$portrait_dir = $phpbb_root_path . $portrait_rel;
 		if (!is_dir($portrait_dir))
 		{
@@ -381,7 +381,7 @@ class wow_api implements game_api_interface
 				$stored_url = !empty($local_path) ? $local_path : $avatar_url;
 
 				// Download and cache full-body render
-				$render_rel = $upload_path . '/bbguild_wow/renders/';
+				$render_rel = $upload_path . '/bbguildwow/renders/';
 				$render_dir = $phpbb_root_path . $render_rel;
 				if (!is_dir($render_dir))
 				{
@@ -711,7 +711,7 @@ class wow_api implements game_api_interface
 		global $phpbb_container;
 		$db = $this->db;
 
-		$equipment_table = $phpbb_container->getParameter('avathar.bbguild_wow.tables.bb_player_equipment');
+		$equipment_table = $phpbb_container->getParameter('avathar.bbguildwow.tables.bb_player_equipment');
 		$stale_threshold = time() - 86400; // 24 hours
 
 		// Get active WoW players whose equipment is stale or missing
@@ -1251,11 +1251,11 @@ class wow_api implements game_api_interface
 		}
 
 		global $phpbb_root_path, $phpbb_container;
-		$wow_ext_path = $phpbb_container->get('ext.manager')->get_extension_path('avathar/bbguild_wow', true);
+		$wow_ext_path = $phpbb_container->get('ext.manager')->get_extension_path('avathar/bbguildwow', true);
 
-		// Store emblems in phpBB's upload directory (files/bbguild_wow/emblems/)
+		// Store emblems in phpBB's upload directory (files/bbguildwow/emblems/)
 		$upload_path = $phpbb_container->get('config')['upload_path'];
-		$emblem_rel = $upload_path . '/bbguild_wow/emblems/';
+		$emblem_rel = $upload_path . '/bbguildwow/emblems/';
 		$emblem_dir = $phpbb_root_path . $emblem_rel;
 		if (!is_dir($emblem_dir))
 		{
@@ -1411,7 +1411,7 @@ class wow_api implements game_api_interface
 	 * falls back to fetching the render URL from the API media endpoint
 	 * and downloading the image.
 	 *
-	 * @param string $wow_ext_path Path to bbguild_wow extension
+	 * @param string $wow_ext_path Path to bbguildwow extension
 	 * @param string $dir          Local subdirectory ('emblems' or 'borders')
 	 * @param string $type         Asset type ('emblem' or 'border')
 	 * @param int    $id           Asset ID

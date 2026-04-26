@@ -5,12 +5,12 @@
  * Combines all schema, data-seeding, and module registration
  * from the former basics/ and v200b1/ migrations into one file.
  *
- * @package   avathar\bbguild_wow
+ * @package   avathar\bbguildwow
  * @copyright 2026 avathar.be
  * @license   http://opensource.org/licenses/gpl-2.0.php GNU General Public License v2
  */
 
-namespace avathar\bbguild_wow\migrations\v200b2;
+namespace avathar\bbguildwow\migrations\v200b2;
 
 class release_2_0_0_b2 extends \phpbb\db\migration\container_aware_migration
 {
@@ -28,8 +28,8 @@ class release_2_0_0_b2 extends \phpbb\db\migration\container_aware_migration
 
 	public function effectively_installed()
 	{
-		return isset($this->config['bbguild_wow_version'])
-			&& version_compare($this->config['bbguild_wow_version'], '2.0.0-b2', '>=');
+		return isset($this->config['bbguildwow_version'])
+			&& version_compare($this->config['bbguildwow_version'], '2.0.0-b2', '>=');
 	}
 
 	/* ------------------------------------------------------------------ */
@@ -163,11 +163,11 @@ class release_2_0_0_b2 extends \phpbb\db\migration\container_aware_migration
 			['config.add', ['bbguild_achiev_hide_empty', 1]],
 			['custom', [[$this, 'seed_game_data']]],
 			['module.add', ['acp', 'ACP_BBGUILD_PLAYER', [
-				'module_basename' => '\avathar\bbguild_wow\acp\achievement_module',
+				'module_basename' => '\avathar\bbguildwow\acp\achievement_module',
 				'modes'           => ['addachievement', 'listachievements'],
 			]]],
 			['module.add', ['acp', 'ACP_BBGUILD_MAINPAGE', [
-				'module_basename' => '\avathar\bbguild_wow\acp\battlenet_module',
+				'module_basename' => '\avathar\bbguildwow\acp\battlenet_module',
 				'modes'           => ['battlenet'],
 			]]],
 			['custom', [[$this, 'set_version']]],
@@ -177,12 +177,12 @@ class release_2_0_0_b2 extends \phpbb\db\migration\container_aware_migration
 	public function revert_data()
 	{
 		return [
-			['config.remove', ['bbguild_wow_version']],
+			['config.remove', ['bbguildwow_version']],
 			['module.remove', ['acp', 'ACP_BBGUILD_MAINPAGE', [
-				'module_basename' => '\avathar\bbguild_wow\acp\battlenet_module',
+				'module_basename' => '\avathar\bbguildwow\acp\battlenet_module',
 			]]],
 			['module.remove', ['acp', 'ACP_BBGUILD_PLAYER', [
-				'module_basename' => '\avathar\bbguild_wow\acp\achievement_module',
+				'module_basename' => '\avathar\bbguildwow\acp\achievement_module',
 			]]],
 			['config.remove', ['bbguild_show_achiev']],
 			['config.remove', ['bbguild_achiev_hide_empty']],
@@ -197,7 +197,7 @@ class release_2_0_0_b2 extends \phpbb\db\migration\container_aware_migration
 
 	public function set_version()
 	{
-		$this->config->set('bbguild_wow_version', '2.0.0-b2');
+		$this->config->set('bbguildwow_version', '2.0.0-b2');
 	}
 
 	public function seed_game_data()
@@ -254,7 +254,7 @@ class release_2_0_0_b2 extends \phpbb\db\migration\container_aware_migration
 
 		// Clean up downloaded portraits
 		$upload_path = $this->config['upload_path'];
-		$portrait_dir = $this->phpbb_root_path . $upload_path . '/bbguild_wow/';
+		$portrait_dir = $this->phpbb_root_path . $upload_path . '/bbguildwow/';
 		if (is_dir($portrait_dir))
 		{
 			$files = glob($portrait_dir . 'portraits/*.jpg');
@@ -269,7 +269,7 @@ class release_2_0_0_b2 extends \phpbb\db\migration\container_aware_migration
 
 	private function get_installer()
 	{
-		return new \avathar\bbguild_wow\game\wow_installer(
+		return new \avathar\bbguildwow\game\wow_installer(
 			$this->container->get('dbal.conn'),
 			$this->container->get('cache.driver'),
 			$this->container->get('config'),

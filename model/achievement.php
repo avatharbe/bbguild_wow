@@ -2,22 +2,22 @@
 /**
  * This file holds the Achievement API class
  *
- * @package   bbguild_wow v2.0
+ * @package   bbguildwow v2.0
  * @copyright 2018 avathar.be
  * @license   http://opensource.org/licenses/gpl-2.0.php GNU General Public License v2
  *
  */
 
-namespace avathar\bbguild_wow\model;
+namespace avathar\bbguildwow\model;
 
-use avathar\bbguild_wow\api\battlenet;
+use avathar\bbguildwow\api\battlenet;
 use avathar\bbguild\model\games\game;
 use avathar\bbguild\model\player\guilds;
 
 /**
  * This provides data about an individual achievement.
  *
- * @package avathar\bbguild_wow\model
+ * @package avathar\bbguildwow\model
  */
 class achievement
 {

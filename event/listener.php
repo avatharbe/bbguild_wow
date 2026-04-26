@@ -6,12 +6,12 @@
  * for the bbGuild sidebar when the current guild is a WoW guild.
  * Also handles ACP template events for game/guild/player editing.
  *
- * @package   avathar\bbguild_wow
+ * @package   avathar\bbguildwow
  * @copyright 2018 avathar.be
  * @license   http://opensource.org/licenses/gpl-2.0.php GNU General Public License v2
  */
 
-namespace avathar\bbguild_wow\event;
+namespace avathar\bbguildwow\event;
 
 use phpbb\config\config;
 use phpbb\controller\helper;
@@ -93,7 +93,7 @@ class listener implements EventSubscriberInterface
 	{
 		$lang_set_ext = $event['lang_set_ext'];
 		$lang_set_ext[] = array(
-			'ext_name' => 'avathar/bbguild_wow',
+			'ext_name' => 'avathar/bbguildwow',
 			'lang_set' => 'wow',
 		);
 		$event['lang_set_ext'] = $lang_set_ext;
@@ -250,12 +250,12 @@ class listener implements EventSubscriberInterface
 		{
 			$this->template->assign_vars(array(
 				'ARMORY_URL'        => $row['guildarmoryurl'],
-				'U_ROSTER_SYNC'     => $this->helper->route('avathar_bbguild_wow_sync_roster', array('guild_id' => $guild_id)),
-				'U_SPEC_SYNC'       => $this->helper->route('avathar_bbguild_wow_sync_specs', array('guild_id' => $guild_id)),
-				'U_PORTRAIT_SYNC'   => $this->helper->route('avathar_bbguild_wow_sync_portraits', array('guild_id' => $guild_id)),
-				'U_CATEGORY_SYNC'   => $this->helper->route('avathar_bbguild_wow_sync_categories', array('guild_id' => $guild_id)),
-				'U_ACHIEV_SYNC'     => $this->helper->route('avathar_bbguild_wow_sync_achievements', array('guild_id' => $guild_id)),
-				'U_EQUIPMENT_SYNC'  => $this->helper->route('avathar_bbguild_wow_sync_equipment', array('guild_id' => $guild_id)),
+				'U_ROSTER_SYNC'     => $this->helper->route('avathar_bbguildwow_sync_roster', array('guild_id' => $guild_id)),
+				'U_SPEC_SYNC'       => $this->helper->route('avathar_bbguildwow_sync_specs', array('guild_id' => $guild_id)),
+				'U_PORTRAIT_SYNC'   => $this->helper->route('avathar_bbguildwow_sync_portraits', array('guild_id' => $guild_id)),
+				'U_CATEGORY_SYNC'   => $this->helper->route('avathar_bbguildwow_sync_categories', array('guild_id' => $guild_id)),
+				'U_ACHIEV_SYNC'     => $this->helper->route('avathar_bbguildwow_sync_achievements', array('guild_id' => $guild_id)),
+				'U_EQUIPMENT_SYNC'  => $this->helper->route('avathar_bbguildwow_sync_equipment', array('guild_id' => $guild_id)),
 			));
 		}
 	}
@@ -332,7 +332,7 @@ class listener implements EventSubscriberInterface
 		}
 
 		// Load equipment
-		$equipment_table = $phpbb_container->getParameter('avathar.bbguild_wow.tables.bb_player_equipment');
+		$equipment_table = $phpbb_container->getParameter('avathar.bbguildwow.tables.bb_player_equipment');
 		$sql = 'SELECT slot_type, item_id, item_name, item_level, quality, icon_url
 			FROM ' . $equipment_table . '
 			WHERE player_id = ' . $player_id . '
@@ -395,7 +395,7 @@ class listener implements EventSubscriberInterface
 		}
 
 		// Fetch stats and professions on demand via API (cached 1h by API layer)
-		$wow_api = $phpbb_container->get('avathar.bbguild_wow.api');
+		$wow_api = $phpbb_container->get('avathar.bbguildwow.api');
 
 		$sql = 'SELECT player_name, player_realm, player_region, g.game_edition
 			FROM ' . $this->bb_players_table . ' p

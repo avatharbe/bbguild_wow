@@ -5,7 +5,7 @@
  * @license GNU General Public License, version 2 (GPL-2.0)
  */
 
-namespace avathar\bbguild_wow\tests\system;
+namespace avathar\bbguildwow\tests\system;
 
 use PHPUnit\Framework\TestCase;
 
@@ -46,11 +46,11 @@ class ext_test extends TestCase
 
 	public function test_ext_is_enableable(): void
 	{
-		$ext = new \avathar\bbguild_wow\ext(
+		$ext = new \avathar\bbguildwow\ext(
 			$this->container,
 			$this->extension_finder,
 			$this->migrator,
-			'avathar/bbguild_wow',
+			'avathar/bbguildwow',
 			''
 		);
 
@@ -70,11 +70,11 @@ class ext_test extends TestCase
 			->with('ext.manager')
 			->willReturn($ext_manager);
 
-		$ext = new \avathar\bbguild_wow\ext(
+		$ext = new \avathar\bbguildwow\ext(
 			$container,
 			$this->extension_finder,
 			$this->migrator,
-			'avathar/bbguild_wow',
+			'avathar/bbguildwow',
 			''
 		);
 

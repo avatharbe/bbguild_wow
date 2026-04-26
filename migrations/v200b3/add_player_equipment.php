@@ -2,19 +2,19 @@
 /**
  * bbGuild WoW Extension — add player equipment table
  *
- * @package   avathar\bbguild_wow
+ * @package   avathar\bbguildwow
  * @copyright 2026 avathar.be
  * @license   http://opensource.org/licenses/gpl-2.0.php GNU General Public License v2
  */
 
-namespace avathar\bbguild_wow\migrations\v200b3;
+namespace avathar\bbguildwow\migrations\v200b3;
 
 class add_player_equipment extends \phpbb\db\migration\migration
 {
 	public static function depends_on()
 	{
 		return [
-			'\avathar\bbguild_wow\migrations\v200b2\release_2_0_0_b2',
+			'\avathar\bbguildwow\migrations\v200b2\release_2_0_0_b2',
 		];
 	}
 

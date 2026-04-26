@@ -19,7 +19,7 @@ The API uses **OAuth 2.0 Client Credentials Grant**:
 2. Blizzard responds with `{ "access_token": "...", "expires_in": 86400 }`
 3. All subsequent API requests include `Authorization: Bearer {access_token}` and `Battlenet-Namespace: {type}-{region}`
 
-**Token caching:** Tokens are cached using phpBB's cache service with key `bbguild_wow_oauth_token_{region}`. On 401 response, the cached token is invalidated and the request is retried once.
+**Token caching:** Tokens are cached using phpBB's cache service with key `bbguildwow_oauth_token_{region}`. On 401 response, the cached token is invalidated and the request is retried once.
 
 **CN region:** Uses `https://oauth.battlenet.com.cn/token` instead.
 
@@ -69,12 +69,12 @@ battlenet (factory)
 ### Caching
 
 All API responses are cached using phpBB's cache service:
-- Cache key: `bbguild_wow_api_` + base64-encoded full request URL
+- Cache key: `bbguildwow_api_` + base64-encoded full request URL
 - Default TTL: 3600 seconds (1 hour)
 - Cache is stored in phpBB's configured cache backend (file, APCu, Redis, etc.)
 
 OAuth tokens are cached separately:
-- Cache key: `bbguild_wow_oauth_token_{region}`
+- Cache key: `bbguildwow_oauth_token_{region}`
 - TTL: token expiry minus 5 minutes (typically ~23.9 hours)
 
 ## Guild API

@@ -8,13 +8,13 @@
 
 ## Step 1: Install the Extension
 
-1. Download or clone `bbguild_wow` into your phpBB extensions directory:
+1. Download or clone `bbguildwow` into your phpBB extensions directory:
    ```
-   /ext/avathar/bbguild_wow/
+   /ext/avathar/bbguildwow/
    ```
 2. Verify the file structure — you should have:
    ```
-   ext/avathar/bbguild_wow/
+   ext/avathar/bbguildwow/
    ├── composer.json
    ├── ext.php
    ├── config/services.yml
@@ -89,7 +89,7 @@ The Battle.net API enables automatic guild member synchronization, character por
 
 ### Extension does not appear in ACP
 - Verify bbGuild core is enabled first.
-- Check that files are in the correct directory: `ext/avathar/bbguild_wow/composer.json` must exist.
+- Check that files are in the correct directory: `ext/avathar/bbguildwow/composer.json` must exist.
 - Clear the phpBB cache: ACP > General > Purge the cache.
 
 ### "World of Warcraft" does not appear in installable games

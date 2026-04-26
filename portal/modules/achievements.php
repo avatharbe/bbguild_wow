@@ -5,15 +5,15 @@
  * Displays a 3-level achievement browser: category cards with progress rings,
  * AJAX-loaded achievement list, and achievement detail modal.
  *
- * @package   avathar\bbguild_wow
+ * @package   avathar\bbguildwow
  * @copyright 2018 avathar.be
  * @license   http://opensource.org/licenses/gpl-2.0.php GNU General Public License v2
  */
 
-namespace avathar\bbguild_wow\portal\modules;
+namespace avathar\bbguildwow\portal\modules;
 
 use avathar\bbguild\portal\modules\module_base;
-use avathar\bbguild_wow\model\achievement;
+use avathar\bbguildwow\model\achievement;
 use phpbb\config\config;
 use phpbb\controller\helper;
 use phpbb\db\driver\driver_interface;
@@ -24,7 +24,7 @@ class achievements extends module_base
 	protected int $columns = 21; // top + center + bottom
 	protected string $name = 'BBGUILD_PORTAL_ACHIEVEMENTS';
 	protected string $image_src = '';
-	protected $language = array('vendor' => 'avathar/bbguild_wow', 'file' => 'wow');
+	protected $language = array('vendor' => 'avathar/bbguildwow', 'file' => 'wow');
 
 	/** @var config */
 	protected config $config;
@@ -122,8 +122,8 @@ class achievements extends module_base
 		));
 
 		// Assign AJAX route base URLs for JS — use helper->route() for correct paths on any installation
-		$achiev_list_url = $this->helper->route('avathar_bbguild_wow_achiev_list', array('guild_id' => (int) $this->guild_id, 'category_id' => 0));
-		$achiev_detail_url = $this->helper->route('avathar_bbguild_wow_achiev_detail', array('guild_id' => (int) $this->guild_id, 'achievement_id' => 0));
+		$achiev_list_url = $this->helper->route('avathar_bbguildwow_achiev_list', array('guild_id' => (int) $this->guild_id, 'category_id' => 0));
+		$achiev_detail_url = $this->helper->route('avathar_bbguildwow_achiev_detail', array('guild_id' => (int) $this->guild_id, 'achievement_id' => 0));
 		// Strip the trailing placeholder "0" so JS can append the real ID
 		$achiev_list_base = substr($achiev_list_url, 0, strrpos($achiev_list_url, '0'));
 		$achiev_detail_base = substr($achiev_detail_url, 0, strrpos($achiev_detail_url, '0'));
@@ -139,7 +139,7 @@ class achievements extends module_base
 		// Fetch recently earned achievements
 		$this->load_recent_achievements();
 
-		return '@avathar_bbguild_wow/portal/modules/achievements_center.html';
+		return '@avathar_bbguildwow/portal/modules/achievements_center.html';
 	}
 
 	/**

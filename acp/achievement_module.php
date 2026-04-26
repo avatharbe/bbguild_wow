@@ -2,13 +2,13 @@
 /**
  * achievement acp file
  *
- * @package   bbguild_wow v2.0
+ * @package   bbguildwow v2.0
  * @copyright 2018 avathar.be
  * @author    Sajaki
  * @license   http://opensource.org/licenses/gpl-2.0.php GNU General Public License v2
  */
 
-namespace avathar\bbguild_wow\acp;
+namespace avathar\bbguildwow\acp;
 
 use avathar\bbguild\model\admin\constants;
 use avathar\bbguild\model\player\guilds;
@@ -18,7 +18,7 @@ use avathar\bbguild\model\games\rpg\faction;
 /**
  * This class manages achievement info
  * @todo finish this module
- * @package avathar\bbguild_wow\acp
+ * @package avathar\bbguildwow\acp
  */
 class achievement_module
 {
@@ -87,7 +87,7 @@ class achievement_module
 		$this->phpbb_container = $phpbb_container;
 		$this->auth=$auth;
 
-		$form_key = 'avathar/bbguild_wow';
+		$form_key = 'avathar/bbguildwow';
 		add_form_key($form_key);
 		$this->tpl_name   = 'acp_' . $mode;
 
@@ -103,10 +103,10 @@ class achievement_module
 			)
 		);
 
-		$this->moduleurl = 'i=-avathar-bbguild_wow-acp-achievement_module&amp;';
+		$this->moduleurl = 'i=-avathar-bbguildwow-acp-achievement_module&amp;';
 
 		// Get achievement service from container
-		$this->achievement = $phpbb_container->get('avathar.bbguild_wow.achievement');
+		$this->achievement = $phpbb_container->get('avathar.bbguildwow.achievement');
 
 		switch ($mode)
 		{
@@ -160,7 +160,7 @@ class achievement_module
 
 				if ($add || $update)
 				{
-					if (! check_form_key('avathar/bbguild_wow'))
+					if (! check_form_key('avathar/bbguildwow'))
 					{
 						trigger_error($this->user->lang['FORM_INVALID'] . adm_back_link($this->u_action));
 					}
@@ -230,7 +230,7 @@ class achievement_module
 		$GuildAchievements = $this->achievement->get_tracked_achievements($start, $Guild->guildid, 0);
 		$footcount_text   = sprintf($this->user->lang['ACHIEV_FOOTCOUNT'], $GuildAchievements[2]);
 
-		$modulename = 'i=-avathar-bbguild_wow-acp-achievement_module&amp;mode=listachievements';
+		$modulename = 'i=-avathar-bbguildwow-acp-achievement_module&amp;mode=listachievements';
 		$pagination = $this->phpbb_container->get('pagination');
 		$pagination_url = append_sid(
 			"{$phpbb_admin_path}index.$phpEx",
@@ -438,7 +438,7 @@ class achievement_module
 			'reward'      => '',
 		);
 
-		$this->db->sql_query('INSERT INTO ' . $this->phpbb_container->getParameter('avathar.bbguild_wow.tables.bb_achievement') . ' ' .
+		$this->db->sql_query('INSERT INTO ' . $this->phpbb_container->getParameter('avathar.bbguildwow.tables.bb_achievement') . ' ' .
 			$this->db->sql_build_array('INSERT', $sql_ary));
 
 		trigger_error($this->user->lang['ACHIEV_ADDED'] . $this->link);
@@ -467,7 +467,7 @@ class achievement_module
 			'factionid'   => $faction_id,
 		);
 
-		$this->db->sql_query('UPDATE ' . $this->phpbb_container->getParameter('avathar.bbguild_wow.tables.bb_achievement') .
+		$this->db->sql_query('UPDATE ' . $this->phpbb_container->getParameter('avathar.bbguildwow.tables.bb_achievement') .
 			' SET ' . $this->db->sql_build_array('UPDATE', $sql_ary) .
 			' WHERE id = ' . (int) $achievement_id);
 
@@ -518,8 +518,8 @@ class achievement_module
 	private function delete_achievement_by_id(int $achievement_id): void
 	{
 		$tables = array(
-			$this->phpbb_container->getParameter('avathar.bbguild_wow.tables.bb_achievement')       => 'id',
-			$this->phpbb_container->getParameter('avathar.bbguild_wow.tables.bb_achievement_track') => 'achievement_id',
+			$this->phpbb_container->getParameter('avathar.bbguildwow.tables.bb_achievement')       => 'id',
+			$this->phpbb_container->getParameter('avathar.bbguildwow.tables.bb_achievement_track') => 'achievement_id',
 		);
 
 		foreach ($tables as $table => $column)
@@ -528,7 +528,7 @@ class achievement_module
 		}
 
 		// Delete relations (criteria + rewards links)
-		$this->db->sql_query('DELETE FROM ' . $this->phpbb_container->getParameter('avathar.bbguild_wow.tables.bb_relations_table') .
+		$this->db->sql_query('DELETE FROM ' . $this->phpbb_container->getParameter('avathar.bbguildwow.tables.bb_relations_table') .
 			" WHERE attribute_id = 'ACH' AND att_value = " . (int) $achievement_id);
 	}
 
