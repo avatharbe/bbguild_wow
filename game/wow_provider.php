@@ -12,13 +12,14 @@
 namespace avathar\bbguildwow\game;
 
 use avathar\bbguild\model\games\game_provider_interface;
+use avathar\bbguild\model\games\specialization_provider_interface;
 
 /**
  * Class wow_provider
  *
  * @package avathar\bbguildwow\game
  */
-class wow_provider implements game_provider_interface
+class wow_provider implements game_provider_interface, specialization_provider_interface
 {
 	/** @var wow_installer */
 	private $installer;
@@ -144,5 +145,121 @@ class wow_provider implements game_provider_interface
 			'MAIL'    => 'Mail',
 			'PLATE'   => 'Plate',
 		);
+	}
+
+	/**
+	 * Specialization catalog for WoW (issue #331).
+	 *
+	 * Static so the installer can read the same source of truth without
+	 * needing to construct a provider (provider depends on api + ext_manager).
+	 *
+	 * Class IDs match Battle.net's playable_class IDs (1=Warrior … 13=Evoker)
+	 * so the data lines up with character profile responses.
+	 * Role IDs use the bbguild abstract role seed: 0=DPS, 1=Healer, 2=Tank.
+	 *
+	 * @return array<int, list<array{spec_name:string,role_id:int,spec_icon:string,spec_order:int}>>
+	 */
+	public static function spec_catalog(): array
+	{
+		// Role constants for readability.
+		$dps    = 0;
+		$healer = 1;
+		$tank   = 2;
+
+		return [
+			// 1 — Warrior
+			1 => [
+				['spec_name' => 'Arms',       'role_id' => $dps,    'spec_icon' => 'warrior_arms',       'spec_order' => 1],
+				['spec_name' => 'Fury',       'role_id' => $dps,    'spec_icon' => 'warrior_fury',       'spec_order' => 2],
+				['spec_name' => 'Protection', 'role_id' => $tank,   'spec_icon' => 'warrior_protection', 'spec_order' => 3],
+			],
+			// 2 — Paladin
+			2 => [
+				['spec_name' => 'Holy',        'role_id' => $healer, 'spec_icon' => 'paladin_holy',        'spec_order' => 1],
+				['spec_name' => 'Protection',  'role_id' => $tank,   'spec_icon' => 'paladin_protection',  'spec_order' => 2],
+				['spec_name' => 'Retribution', 'role_id' => $dps,    'spec_icon' => 'paladin_retribution', 'spec_order' => 3],
+			],
+			// 3 — Hunter
+			3 => [
+				['spec_name' => 'Beast Mastery', 'role_id' => $dps, 'spec_icon' => 'hunter_beast_mastery', 'spec_order' => 1],
+				['spec_name' => 'Marksmanship',  'role_id' => $dps, 'spec_icon' => 'hunter_marksmanship',  'spec_order' => 2],
+				['spec_name' => 'Survival',      'role_id' => $dps, 'spec_icon' => 'hunter_survival',      'spec_order' => 3],
+			],
+			// 4 — Rogue
+			4 => [
+				['spec_name' => 'Assassination', 'role_id' => $dps, 'spec_icon' => 'rogue_assassination', 'spec_order' => 1],
+				['spec_name' => 'Outlaw',        'role_id' => $dps, 'spec_icon' => 'rogue_outlaw',        'spec_order' => 2],
+				['spec_name' => 'Subtlety',      'role_id' => $dps, 'spec_icon' => 'rogue_subtlety',      'spec_order' => 3],
+			],
+			// 5 — Priest
+			5 => [
+				['spec_name' => 'Discipline', 'role_id' => $healer, 'spec_icon' => 'priest_discipline', 'spec_order' => 1],
+				['spec_name' => 'Holy',       'role_id' => $healer, 'spec_icon' => 'priest_holy',       'spec_order' => 2],
+				['spec_name' => 'Shadow',     'role_id' => $dps,    'spec_icon' => 'priest_shadow',     'spec_order' => 3],
+			],
+			// 6 — Death Knight
+			6 => [
+				['spec_name' => 'Blood',  'role_id' => $tank, 'spec_icon' => 'deathknight_blood',  'spec_order' => 1],
+				['spec_name' => 'Frost',  'role_id' => $dps,  'spec_icon' => 'deathknight_frost',  'spec_order' => 2],
+				['spec_name' => 'Unholy', 'role_id' => $dps,  'spec_icon' => 'deathknight_unholy', 'spec_order' => 3],
+			],
+			// 7 — Shaman
+			7 => [
+				['spec_name' => 'Elemental',   'role_id' => $dps,    'spec_icon' => 'shaman_elemental',   'spec_order' => 1],
+				['spec_name' => 'Enhancement', 'role_id' => $dps,    'spec_icon' => 'shaman_enhancement', 'spec_order' => 2],
+				['spec_name' => 'Restoration', 'role_id' => $healer, 'spec_icon' => 'shaman_restoration', 'spec_order' => 3],
+			],
+			// 8 — Mage
+			8 => [
+				['spec_name' => 'Arcane', 'role_id' => $dps, 'spec_icon' => 'mage_arcane', 'spec_order' => 1],
+				['spec_name' => 'Fire',   'role_id' => $dps, 'spec_icon' => 'mage_fire',   'spec_order' => 2],
+				['spec_name' => 'Frost',  'role_id' => $dps, 'spec_icon' => 'mage_frost',  'spec_order' => 3],
+			],
+			// 9 — Warlock
+			9 => [
+				['spec_name' => 'Affliction',  'role_id' => $dps, 'spec_icon' => 'warlock_affliction',  'spec_order' => 1],
+				['spec_name' => 'Demonology',  'role_id' => $dps, 'spec_icon' => 'warlock_demonology',  'spec_order' => 2],
+				['spec_name' => 'Destruction', 'role_id' => $dps, 'spec_icon' => 'warlock_destruction', 'spec_order' => 3],
+			],
+			// 10 — Monk
+			10 => [
+				['spec_name' => 'Brewmaster', 'role_id' => $tank,   'spec_icon' => 'monk_brewmaster', 'spec_order' => 1],
+				['spec_name' => 'Mistweaver', 'role_id' => $healer, 'spec_icon' => 'monk_mistweaver', 'spec_order' => 2],
+				['spec_name' => 'Windwalker', 'role_id' => $dps,    'spec_icon' => 'monk_windwalker', 'spec_order' => 3],
+			],
+			// 11 — Druid
+			11 => [
+				['spec_name' => 'Balance',     'role_id' => $dps,    'spec_icon' => 'druid_balance',     'spec_order' => 1],
+				['spec_name' => 'Feral',       'role_id' => $dps,    'spec_icon' => 'druid_feral',       'spec_order' => 2],
+				['spec_name' => 'Guardian',    'role_id' => $tank,   'spec_icon' => 'druid_guardian',    'spec_order' => 3],
+				['spec_name' => 'Restoration', 'role_id' => $healer, 'spec_icon' => 'druid_restoration', 'spec_order' => 4],
+			],
+			// 12 — Demon Hunter
+			12 => [
+				['spec_name' => 'Havoc',     'role_id' => $dps,  'spec_icon' => 'demonhunter_havoc',     'spec_order' => 1],
+				['spec_name' => 'Vengeance', 'role_id' => $tank, 'spec_icon' => 'demonhunter_vengeance', 'spec_order' => 2],
+			],
+			// 13 — Evoker
+			13 => [
+				['spec_name' => 'Devastation',  'role_id' => $dps,    'spec_icon' => 'evoker_devastation',  'spec_order' => 1],
+				['spec_name' => 'Preservation', 'role_id' => $healer, 'spec_icon' => 'evoker_preservation', 'spec_order' => 2],
+				['spec_name' => 'Augmentation', 'role_id' => $dps,    'spec_icon' => 'evoker_augmentation', 'spec_order' => 3],
+			],
+		];
+	}
+
+	public function get_spec_label(): string
+	{
+		return 'Specialization';
+	}
+
+	/**
+	 * Interface implementation: delegates to the static catalog.
+	 *
+	 * @return array<int, list<array{spec_name:string,role_id:int,spec_icon:string,spec_order:int}>>
+	 */
+	public function get_specializations(): array
+	{
+		return self::spec_catalog();
 	}
 }

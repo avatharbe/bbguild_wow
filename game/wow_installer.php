@@ -312,4 +312,38 @@ class wow_installer extends abstract_game_install
 
 		$this->db->sql_multi_insert($this->table('bb_language_table'), $sql_ary);
 	}
+
+	/**
+	 * Installs WoW specializations (issue #331).
+	 *
+	 * Skipped on installs that haven't run core migration v200b4 yet
+	 * (table_names lacks bb_specializations_table).
+	 */
+	protected function install_specs(): void
+	{
+		if (!isset($this->table_names['bb_specializations_table']))
+		{
+			return;
+		}
+
+		$rows = [];
+		foreach (wow_provider::spec_catalog() as $class_id => $specs)
+		{
+			foreach ($specs as $spec)
+			{
+				$rows[] = [
+					'game_id'    => $this->game_id,
+					'class_id'   => (int) $class_id,
+					'role_id'    => (int) $spec['role_id'],
+					'spec_name'  => (string) $spec['spec_name'],
+					'spec_icon'  => (string) $spec['spec_icon'],
+					'spec_order' => (int) $spec['spec_order'],
+				];
+			}
+		}
+		if ($rows)
+		{
+			$this->db->sql_multi_insert($this->table('bb_specializations_table'), $rows);
+		}
+	}
 }
